@@ -3,14 +3,40 @@ from flask import request
 import os
 from bot import ObjectDetectionBot
 import boto3
+from botocore.exceptions import ClientError
+import json
 
 app = flask.Flask(__name__)
 
+def get_secret():
 
+    secret_name = "telegram-token"
+    region_name = "eu-north-1"
+
+    # Create a Secrets Manager client
+    session = boto3.session.Session()
+    client = session.client(
+        service_name='secretsmanager',
+        region_name=region_name
+    )
+
+    try:
+        get_secret_value_response = client.get_secret_value(
+            SecretId=secret_name
+        )
+    except ClientError as e:
+        # For a list of exceptions thrown, see
+        # https://docs.aws.amazon.com/secretsmanager/latest/apireference/API_GetSecretValue.html
+        raise e
+
+    secret = get_secret_value_response['SecretString']
+    print(secret)
+    secret = json.loads(secret)
+    return secret["telegram-token"]
 # TODO load TELEGRAM_TOKEN value from Secret Manager
-TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
 
-TELEGRAM_APP_URL =   'https://repeatedly-loving-bluebird.ngrok-free.app'
+TELEGRAM_TOKEN = get_secret()
+TELEGRAM_APP_URL =  'https://polybot.magvonim.site:8443'
 
 
 @app.route('/', methods=['GET'])
@@ -28,29 +54,29 @@ def webhook():
 @app.route(f'/results', methods=['POST'])
 def results():
     prediction_id = request.args.get('prediction_id')
-    table = dynamodb.Table("BotYolo5")
-
-    # TODO use the prediction_id to retrieve results from DynamoDB and send to the end-user
-    response= table.get_item(Key={'prediction_id':prediction_id})
-    class_counts={}
-
+    # TODO use the prediction id to retrieve results from DynamoDB and send to the end-user
+    dynamodb = boto3.resource('dynamodb', 'eu-north-1')
+    table = dynamodb.Table('polybot')
+    response = table.get_item(Key={'prediction_id': prediction_id})
     chat_id = int(response['Item']['chat_id'])
-    labels=response['Item']['labels']
-    for x in labels:
-        name = x['class']
-        if name in class_counts:
-            class_counts[name] += 1
-        else:
-            class_counts[name] = 1 
-    print(class_counts)
-    text_results=[]
-    for name,count in class_counts.items():
-        text_results.append(f"There are {count} {name}(s).")
-    result_message = "\n".join(text_results)
-    #text_results =response['Item']['labels'][0]['class']
+    objects = response['Item']['labels']
+    
+    dictrespone = {}
+    for x in range(len(objects)):
+        try:
+            dictrespone.update({objects[x]['class']: dictrespone[objects[x]['class']] + 1})
+        except:
+            dictrespone[objects[x]['class']] = 1
+
+    text_results = ""
+    for keys, values in dictrespone.items():
+        text_results = f"{text_results}{keys}: {values}\n"
+    
+    # text_results = response['Item']['labels'][0]['class']
     bot.send_text(chat_id, text_results)
     return 'Ok'
 
+ 
 
 @app.route(f'/loadTest/', methods=['POST'])
 def load_test():
