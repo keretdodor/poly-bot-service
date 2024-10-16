@@ -8,12 +8,13 @@ from loguru import logger
 import os
 import boto3
 import requests
+import datetime
 
 
-images_bucket = os.environ['BUCKET_NAME']
-queue_name = os.environ['SQS_QUEUE_NAME']
+images_bucket = 'dors-polybot-image-bucket'
+queue_name = 'https://sqs.eu-north-1.amazonaws.com/851725559197/polybot-queue'
 
-sqs_client = boto3.client('sqs', region_name='YOUR_REGION_HERE')
+sqs_client = boto3.client('sqs', region_name='eu-north-1')
 
 with open("data/coco128.yaml", "r") as stream:
     names = yaml.safe_load(stream)['names']
@@ -34,15 +35,23 @@ def consume():
             message_dict = json.loads(message)
 
             # Receives a URL parameter representing the image to download from S3
-            img_name = ... # TODO extract from `message_dict`
-            chat_id = ... # TODO extract from `message_dict`
+            img_name = message_dict["image_name"]
+            chat_id = message_dict["chat_id"]
             local_img_dir = 'tempImages'
-            os.makedirs(local_img_dir, exist_ok=True)
+            os.makedirs(f'{local_img_dir}/{chat_id}' ,exist_ok=True)
             original_img_path = os.path.join(local_img_dir, img_name)
 
             # TODO download img_name from S3, store the local image path in original_img_path
+            s3_client = boto3.client('s3')
+
+            logger.info(f'image path: {original_img_path} image name: {img_name} chat id: {chat_id}')
+            s3_client.download_file(images_bucket,img_name,original_img_path)
+
+
+
 
             logger.info(f'prediction: {prediction_id}/{original_img_path}. Download img completed')
+
 
             # Predicts the objects in the image
             run(
@@ -58,15 +67,17 @@ def consume():
 
             # This is the path for the predicted image with labels
             # The predicted image typically includes bounding boxes drawn around the detected objects, along with class labels and possibly confidence scores.
-            predicted_img_path = Path(f'static/data/{prediction_id}/{img_name}')
+            predicted_img_path = Path(f'static/data/{prediction_id}/{img_name.split("/")[-1]}')
+            logger.info(f'{predicted_img_path}')
 
             # Upload the predicted image to S3
-            predicted_img_s3_path = f'predictions/{prediction_id}/{img_name}'
+            predicted_img_s3_path = f'tempImages/{prediction_id}/{img_name}_predicted.png'
 
-            # TODO Uploads the predicted image (predicted_img_path) to S3 (be careful not to override the original image).
+            # TODO Uploads the predicted image (predicted_img_path) to S3 (be careful not to override the original image).\
+            s3_client.upload_file(predicted_img_path, images_bucket, f'{img_name}_predicted.png')
 
             # Parse prediction labels and create a summary
-            pred_summary_path = Path(f'static/data/{prediction_id}/labels/{img_name.split(".")[0]}.txt')
+            pred_summary_path = Path(f'static/data/{prediction_id}/labels/{img_name.split("/")[-1][:-4]}.txt')
             if pred_summary_path.exists():
                 with open(pred_summary_path) as f:
                     labels = f.read().splitlines()
@@ -91,10 +102,15 @@ def consume():
                 }
 
                 # TODO store the prediction_summary in a DynamoDB table
+                dynamodb = boto3.resource('dynamodb', 'eu-north-1')
+                table =dynamodb.Table ('polybot')
+                table.put_item(
+                    Item = prediction_summary
+                )
 
 
                 # TODO perform a GET request to Polybot to `/results` endpoint
-                loadbalancer_domain = ...
+                loadbalancer_domain = 'https://polybot.magvonim.site:8443'
                 try:
                     response = requests.post(f'{loadbalancer_domain}/results', params={'prediction_id': prediction_id})
                     response.raise_for_status()  # Raise an exception for HTTP errors (4xx or 5xx)
