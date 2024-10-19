@@ -10,10 +10,19 @@ resource "aws_instance" "polybot" {
   associate_public_ip_address = true
   iam_instance_profile    = aws_iam_instance_profile.polybot-profile.name
 
-  tags = {
-    Name = "polybot"
+ tags = {
+    Name = "polybot-${count.index}"  # Adding index to the name for uniqueness
+
+     }
+    user_data = <<-EOF
+              #!/bin/bash
+              sudo apt-get update -y
+              sudo apt-get install -y ansible
+              EOF
+
   }
-}
+
+  
 
 resource "aws_iam_instance_profile" "polybot-profile" {
   name = "polybot-profile"

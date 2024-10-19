@@ -14,11 +14,11 @@ module "vpc" {
 }
 
 resource "aws_sqs_queue" "polybot-queue" {
-  name                      = "poly-bot-queue"
+  name                      = var.sqs_queue_name
 }
 
 resource "aws_dynamodb_table" "polybot-table" {
-  name           = "polybotWOW"
+  name           = var.dynamo_table_name
   billing_mode   = "PROVISIONED"
   read_capacity  = 1
   write_capacity = 1
