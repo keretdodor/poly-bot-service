@@ -10,11 +10,16 @@ import boto3
 import requests
 import datetime
 
+aws_region = os.getenv('AWS_REGION')
+dynamodb_table = os.getenv('DYNAMODB_TABLE')
+record_name = os.getenv('RECORD_NAME')
+sqs_queue_url = os.getenv('SQS_QUEUE_URL')
+s3_bucket = os.getenv('S3_BUCKET')
 
-images_bucket = 'dors-polybot-image-bucket'
-queue_name = 'https://sqs.eu-north-1.amazonaws.com/851725559197/polybot-queue'
+images_bucket = s3_bucket
+queue_name = sqs_queue_url
 
-sqs_client = boto3.client('sqs', region_name='eu-north-1')
+sqs_client = boto3.client('sqs', region_name=aws_region)
 
 with open("data/coco128.yaml", "r") as stream:
     names = yaml.safe_load(stream)['names']
@@ -102,15 +107,15 @@ def consume():
                 }
 
                 # TODO store the prediction_summary in a DynamoDB table
-                dynamodb = boto3.resource('dynamodb', 'eu-north-1')
-                table =dynamodb.Table ('polybot')
+                dynamodb = boto3.resource('dynamodb', region_name=aws_region)
+                table =dynamodb.Table (dynamodb_table)
                 table.put_item(
                     Item = prediction_summary
                 )
 
 
                 # TODO perform a GET request to Polybot to `/results` endpoint
-                loadbalancer_domain = 'https://polybot.magvonim.site:8443'
+                loadbalancer_domain = f'https://{record_name}:8443'
                 try:
                     response = requests.post(f'{loadbalancer_domain}/results', params={'prediction_id': prediction_id})
                     response.raise_for_status()  # Raise an exception for HTTP errors (4xx or 5xx)

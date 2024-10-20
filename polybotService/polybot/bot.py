@@ -9,6 +9,10 @@ import datetime
 
 import json
 
+aws_region = os.getenv('AWS_REGION')
+sqs_queue_url = os.getenv('SQS_QUEUE_URL')
+s3_bucket = os.getenv('S3_BUCKET')
+
 class Bot:
 
     def __init__(self, token, telegram_chat_url):
@@ -78,7 +82,7 @@ class ObjectDetectionBot(Bot):
 
             # TODO upload photo_path to S3
             s3 = boto3.client('s3')
-            bucket_name = 'dors-polybot-image-bucket'
+            bucket_name = s3_bucket
             image_name = os.path.basename(photo_path)
             key_name = f'{chat_id}/{datetime.datetime.now()}.png'
             s3.upload_file(photo_path, bucket_name, key_name)
@@ -89,8 +93,8 @@ class ObjectDetectionBot(Bot):
 
             # TODO send a job to the SQS queue
 
-            sqs_client = boto3.client('sqs','eu-north-1')
-            queue_url = 'https://sqs.eu-north-1.amazonaws.com/851725559197/polybot-queue'
+            sqs_client = boto3.client('sqs',region_name=aws_region)
+            queue_url = sqs_queue_url
 
             # Create message body
             message_body = {

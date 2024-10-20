@@ -8,16 +8,20 @@ import json
 
 app = flask.Flask(__name__)
 
+aws_region = os.getenv('AWS_REGION')
+dynamodb_table = os.getenv('DYNAMODB_TABLE')
+record_name = os.getenv('RECORD_NAME')
+
 def get_secret():
 
     secret_name = "telegram-token"
-    region_name = "eu-north-1"
+    region_name = aws_region
 
     # Create a Secrets Manager client
     session = boto3.session.Session()
     client = session.client(
-        service_name='secretsmanager',
-        region_name=region_name
+        service_name ='secretsmanager',
+        region_name = region_name
     )
 
     try:
@@ -36,7 +40,7 @@ def get_secret():
 # TODO load TELEGRAM_TOKEN value from Secret Manager
 
 TELEGRAM_TOKEN = get_secret()
-TELEGRAM_APP_URL =  'https://polybot.magvonim.site:8443'
+TELEGRAM_APP_URL =  f'https://{record_name}:8443'
 
 
 @app.route('/', methods=['GET'])
@@ -55,8 +59,8 @@ def webhook():
 def results():
     prediction_id = request.args.get('prediction_id')
     # TODO use the prediction id to retrieve results from DynamoDB and send to the end-user
-    dynamodb = boto3.resource('dynamodb', 'eu-north-1')
-    table = dynamodb.Table('polybot')
+    dynamodb = boto3.resource('dynamodb', region_name=aws_region)
+    table = dynamodb.Table(dynamodb_table)
     response = table.get_item(Key={'prediction_id': prediction_id})
     chat_id = int(response['Item']['chat_id'])
     objects = response['Item']['labels']
