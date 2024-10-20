@@ -22,6 +22,8 @@ provider "aws" {
 
 module "vpc" {
   source = "./modules/common"
+  sqs_queue_name = "wowo-poly"
+  dynamo_table_name = "polybot-table-s"
 
 }
 
