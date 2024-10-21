@@ -1,3 +1,21 @@
+#AMI creation
+
+resource "aws_instance" "yolo5" {
+  ami = data.aws_ami.ubuntu_ami.id
+  instance_type = var.instance_type
+  key_name = var.key_name
+
+  subnet_id                   = var.subnet_id[0]
+  vpc_security_group_ids      = [aws_security_group.yolo5-sg.id]
+  associate_public_ip_address = true
+  user_data = file("modules/yolo5/deploy.sh")
+
+ tags = {
+    Name = "yolo5" 
+
+     }
+  
+  }
 
 resource "aws_security_group" "yolo5-sg" {
   name        = "yolo5-sg"  
@@ -17,7 +35,7 @@ resource "aws_security_group" "yolo5-sg" {
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"] 
   }  
-   egress {
+  egress {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
@@ -25,18 +43,17 @@ resource "aws_security_group" "yolo5-sg" {
   }
   
 }
-#------------------------------------------------------------------------
-# AWS Auto Scaling Group
-resource "aws_placement_group" "yolo5-pg" {
-  name     = "test"
-  strategy = "spread"
+
+resource "aws_ami_from_instance" "yolo5-ami" {
+name               = "app-ami-yolo5"
+source_instance_id = aws_instance.yolo5.id
+description        = "ami from yolo5 instance"
 }
 
 resource "aws_launch_template" "yolo5-template" {
   name          = "yolo5-launch-template"
-  image_id      = "ami-08eb150f611ca277f"
-  instance_type = "t3.micro"
-  key_name      = var.key_name
+  image_id      = aws_ami_from_instance.yolo5-ami.id
+  instance_type = var.instance_type
   iam_instance_profile {
     name = aws_iam_instance_profile.yolo5-instance-profile.name
   }
@@ -44,6 +61,23 @@ resource "aws_launch_template" "yolo5-template" {
     security_groups = [aws_security_group.yolo5-sg.id]
   }
 }
+
+resource "null_resource" "terminate_instance" {
+  provisioner "local-exec" {
+    command = "aws ec2 terminate-instances --instance-ids ${aws_instance.yolo5.id}"
+  }
+
+  depends_on = [aws_ami_from_instance.yolo5-ami]
+}
+
+#------------------------------------------------------------------------
+# AWS Auto Scaling Group
+
+resource "aws_placement_group" "yolo5-pg" {
+  name     = "test"
+  strategy = "spread"
+}
+
 
 resource "aws_autoscaling_group" "yolo5-asg" {
   launch_template {
