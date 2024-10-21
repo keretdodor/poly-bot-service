@@ -109,4 +109,4 @@ class ObjectDetectionBot(Bot):
             logger.info(f'Message sent to SQS queue with response: {response}')
             self.send_text(chat_id, "Your image is being processed. Please wait...")
         else:
-            self.send_text(chat_id, "DUDE wait.")
+            self.send_text(chat_id, "Hey there, send me an image so i can start analyzing it")
