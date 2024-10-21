@@ -28,3 +28,11 @@ resource "aws_dynamodb_table" "polybot-table" {
         type = "S"
     }
 }
+
+resource "aws_s3_bucket" "telebot" {
+  bucket = var.bucket_name
+
+  tags = {
+    Name = "telegram-project"
+  }
+}
