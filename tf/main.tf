@@ -20,10 +20,11 @@ provider "aws" {
   region = "eu-north-1"
 }
 
-module "vpc" {
+module "common" {
   source = "./modules/common"
   sqs_queue_name = "wowo-poly"
   dynamo_table_name = "polybot-table-s"
+  bucket_name = "becksboys-ganggang"
 
 }
 
@@ -32,9 +33,9 @@ module "polybot" {
 
   instance_type = "t3.micro"
   key_name      = "BECKS-stockholm-10/9/24"
-  alias         = "beck.magvonim.site"
-  vpc_id        = module.vpc.vpc_id
-  subnet_id     = module.vpc.public_subnets
+  alias_record = "polypol.magvonim.site"
+  vpc_id        = module.common.vpc_id
+  subnet_id     = module.common.public_subnets
 
 }
 module "yolo5" {
@@ -42,6 +43,6 @@ module "yolo5" {
 
   instance_type = "t3.micro"
   key_name      = "BECKS-stockholm-10/9/24"
-  vpc_id        = module.vpc.vpc_id
-  subnet_id     = module.vpc.public_subnets
+  vpc_id        = module.common.vpc_id
+  subnet_id     = module.common.public_subnets
 }
