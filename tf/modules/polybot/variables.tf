@@ -17,7 +17,7 @@ variable "vpc_id" {
   type        = string
   description = "The vpc id"
 }
-variable "alias" {
+variable "alias_record" {
   type        = string
   description = "The full alias record"
 }

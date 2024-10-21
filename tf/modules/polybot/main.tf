@@ -22,7 +22,6 @@ resource "aws_instance" "polybot" {
 
   }
 
-  
 
 resource "aws_iam_instance_profile" "polybot-profile" {
   name = "polybot-profile"
@@ -60,6 +59,18 @@ resource "aws_security_group" "polybot-sg" {
   }
   
 
+}
+
+resource "aws_route53_record" "lb-alias" {
+  zone_id = data.aws_route53_zone.hosted_zone.zone_id 
+  name    = var.alias_record
+  type    = "A"
+
+  alias {
+    name                   = aws_lb.polybot.dns_name
+    zone_id                = aws_lb.polybot.zone_id
+    evaluate_target_health = true
+  }
 }
 
 resource "aws_lb" "polybot" {
@@ -100,18 +111,6 @@ resource "aws_lb_listener" "polybot-listener" {
   default_action {
     type             = "forward"
     target_group_arn = aws_lb_target_group.polybot-tg.arn
-  }
-}
-
-resource "aws_route53_record" "lb-record" {
-  zone_id = data.aws_route53_zone.hosted_zone.zone_id
-  name    = var.alias
-  type    = "A"
-
-  alias {
-    name                   = aws_lb.polybot.dns_name
-    zone_id                = aws_lb.polybot.zone_id
-    evaluate_target_health = true
   }
 }
 
