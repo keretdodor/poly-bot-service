@@ -21,10 +21,10 @@ provider "aws" {
 }
 
 module "common" {
-  source = "./modules/common"
-  sqs_queue_name = "wowo-poly"
+  source            = "./modules/common"
+  sqs_queue_name    = "wowo-poly"
   dynamo_table_name = "polybot-table-s"
-  bucket_name = "becksboys-ganggang"
+  bucket_name       = "becksboys-ganggang"
 
 }
 
@@ -33,7 +33,7 @@ module "polybot" {
 
   instance_type = "t3.micro"
   key_name      = "BECKS-stockholm-10/9/24"
-  alias_record = "polypol.magvonim.site"
+  alias_record  = "polypol.magvonim.site"
   vpc_id        = module.common.vpc_id
   subnet_id     = module.common.public_subnets
 
