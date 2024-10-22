@@ -61,13 +61,15 @@ jobs:
       - name: Get Terraform Outputs
         id: outputs
         run: |
-          echo "::set-output name=ips::$(terraform output -json instance_public_ips)"
+          echo "::set-output name=polybot_public_ips::$(terraform output -json polybot_public_ips)"
           echo "::set-output name=dynamodb_table_name::$(terraform output -raw dynamodb_table_name)"
-          echo "::set-output name=sqs_queue_name::$(terraform output -raw sqs_queue_name)"
-          echo "::set-output name=s3_bucket_name::$(terraform output -raw s3_bucket_name)"
+          echo "::set-output name=sqs_queue_url::$(terraform output -raw sqs_queue_url)"
+          echo "::set-output name=bucket_name::$(terraform output -raw bucket_name)"
+          echo "::set-output name=alias_record::$(terraform output -raw alias_record)"
 
     outputs:
-      ips: ${{ steps.outputs.outputs.ips }}
+      polybot_public_ips: ${{ steps.outputs.outputs.polybot_public_ips }}
       dynamodb_table_name: ${{ steps.outputs.outputs.dynamodb_table_name }}
-      sqs_queue_name: ${{ steps.outputs.outputs.sqs_queue_name }}
-      s3_bucket_name: ${{ steps.outputs.outputs.s3_bucket_name }}
+      sqs_queue_url: ${{ steps.outputs.outputs.sqs_queue_url }}
+      bucket_name: ${{ steps.outputs.outputs.bucket_name }}
+      alias_record: ${{ steps.outputs.outputs.alias_record }}
