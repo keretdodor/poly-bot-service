@@ -66,12 +66,14 @@ jobs:
           echo "::set-output name=bucket_name::$(terraform output -raw bucket_name)"
           echo "::set-output name=alias_record::$(terraform output -raw alias_record)"
 
-    outputs:
-      polybot_public_ips: ${{ steps.outputs.outputs.polybot_public_ips }}
-      dynamodb_table_name: ${{ steps.outputs.outputs.dynamodb_table_name }}  
-      sqs_queue_url: ${{ steps.outputs.outputs.sqs_queue_url }}  
-      bucket_name: ${{ steps.outputs.outputs.bucket_name }}  
-      alias_record: ${{ steps.outputs.outputs.alias_record }}  
+      - name: Set Terraform Outputs as Environment Variables
+        id: set-envs
+        run: |
+          echo "POLYBOT_PUBLIC_IPS=$(terraform output -json polybot_public_ips)" >> $GITHUB_ENV
+          echo "DYNAMODB_TABLE_NAME=$(terraform output -raw dynamodb_table_name)" >> $GITHUB_ENV
+          echo "SQS_QUEUE_URL=$(terraform output -raw sqs_queue_url)" >> $GITHUB_ENV
+          echo "BUCKET_NAME=$(terraform output -raw bucket_name)" >> $GITHUB_ENV
+          echo "ALIAS_RECORD=$(terraform output -raw alias_record)" >> $GITHUB_ENV
 
   ansible:
     name: Ansible Configuration
@@ -93,11 +95,11 @@ jobs:
 
       - name: Print Terraform Outputs
         run: |
-          echo "Polybot Public IPs: ${{ needs.terraform.outputs.polybot_public_ips }}"
-          echo "DynamoDB Table Name: ${{ needs.terraform.outputs.dynamodb_table_name }}"
-          echo "SQS Queue URL: ${{ needs.terraform.outputs.sqs_queue_url }}"
-          echo "Bucket Name: ${{ needs.terraform.outputs.bucket_name }}"
-          echo "Alias Record: ${{ needs.terraform.outputs.alias_record }}"
+          echo "Polybot Public IPs: $POLYBOT_PUBLIC_IPS"
+          echo "DynamoDB Table Name: $DYNAMODB_TABLE_NAME"
+          echo "SQS Queue URL: $SQS_QUEUE_URL"
+          echo "Bucket Name: $BUCKET_NAME"
+          echo "Alias Record: $ALIAS_RECORD"
         shell: bash
 
       - name: Create Ansible Inventory
