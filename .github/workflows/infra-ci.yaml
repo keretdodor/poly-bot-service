@@ -112,7 +112,7 @@ jobs:
 
       - name: Run Ansible Playbook
         run: |
-          ansible-playbook -i inventory.ini /infrastructure/ansible/playbook.yml \
+          ansible-playbook -i inventory.ini playbook.yaml \
           --extra-vars "dynamodb_table_name=${{ needs.terraform.outputs.dynamodb_table_name }} \
           sqs_queue_url=${{ needs.terraform.outputs.sqs_queue_url }} \
           bucket_name=${{ needs.terraform.outputs.bucket_name }} \
