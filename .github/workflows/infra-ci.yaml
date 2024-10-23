@@ -69,11 +69,11 @@ jobs:
 
     outputs:
 
-          polybot_public_ips: ${{ steps.outputs.outputs.polybot_public_ips }}  
-          dynamodb_table_name: ${{ steps.outputs.dynamodb_table_name }}
-          sqs_queue_url: ${{ steps.outputs.sqs_queue_url }}
-          bucket_name: ${{ steps.outputs.bucket_name }}
-          alias_record: ${{ steps.outputs.alias_record }}
+          polybot_public_ips: ${{ env.polybot_public_ips }}
+          dynamodb_table_name: ${{ env.dynamodb_table_name }}
+          sqs_queue_url: ${{ env.sqs_queue_url }}
+          bucket_name: ${{ env.bucket_name }}
+          alias_record: ${{ env.alias_record }}
 
       
   ansible:
