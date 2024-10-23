@@ -20,6 +20,6 @@ output "alias_record" {
 output "polybot_public_ips" {
   value = module.polybot.polybot_public_ips
 }
-output "aws_region"{
+output "aws_region" {
   value = module.polybot.polybot_public_ips
 }

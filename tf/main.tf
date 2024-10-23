@@ -47,11 +47,11 @@ module "yolo5" {
   vpc_id        = module.common.vpc_id
   subnet_id     = module.common.public_subnets
 
-  sqs_queue_url = module.common.sqs_queue_url
+  sqs_queue_url       = module.common.sqs_queue_url
   dynamodb_table_name = module.common.dynamodb_table_name
-  s3_bucket = module.common.bucket_name
-  alias_record = module.polybot.alias_record
-  aws_region = var.aws_region
+  s3_bucket           = module.common.bucket_name
+  alias_record        = module.polybot.alias_record
+  aws_region          = var.aws_region
 
 
 }
