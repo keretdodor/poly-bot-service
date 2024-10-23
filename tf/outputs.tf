@@ -4,7 +4,7 @@ output "sqs_queue_url" {
 }
 
 output "dynamodb_table_name" {
-  value       = module.common.dynamo_table_name
+  value       = module.common.dynamodb_table_name
   description = "The table's name"
 }
 

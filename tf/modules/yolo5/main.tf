@@ -8,14 +8,14 @@ resource "aws_instance" "yolo5" {
   subnet_id                   = var.subnet_id[0]
   vpc_security_group_ids      = [aws_security_group.yolo5-sg.id]
   associate_public_ip_address = true
-  user_data = templatefile("module/yolo5/deploy.sh", {
-      SQS_QUEUE_URL = var.sqs_queue_url
-      DYNAMODB_TABLE_NAME = var.dynamodb_table_name
-      S3_BUCKET = var.s3_bucket
-      ALIAS_RECORD = var.alias_record
-      AWS_REGION = var.aws_region
+  user_data = templatefile("${path.module}/deploy.sh", {  
+    SQS_QUEUE_URL = var.sqs_queue_url,
+    DYNAMODB_TABLE_NAME = var.dynamodb_table_name,
+    S3_BUCKET = var.s3_bucket,
+    ALIAS_RECORD = var.alias_record,
+    AWS_REGION = var.aws_region,
+})
 
-  })
  tags = {
     Name = "yolo5" 
 
