@@ -94,33 +94,25 @@ jobs:
           sudo apt-get install -y ansible
 
       - name: Create Ansible Inventory
-        run: | # Create inventory file with header
+        run: | 
                 echo "[polybot]" > inventory.ini
-
-                
                 echo "Raw Terraform output: '${{ needs.Terraform.outputs.polybot_public_ips }}'"
-
                 # Parse the IPs by splitting on spaces or commas, depending on the format
                 ips=$(echo "${{ needs.Terraform.outputs.polybot_public_ips }}" | tr ',' ' ')
-
-                # Check if any IPs were found
                 if [[ -z "$ips" ]]; then
                   echo "No IPs found in Terraform output."
                   exit 1
                 fi
-
                 # Add each IP to the inventory
                 for ip in $ips; do
                   echo "$ip" >> inventory.ini
                 done
-
-         
         shell: bash
 
 
       - name: Run Ansible Playbook
         run: |
-          ansible-playbook -i inventory.ini playbook.yml \
+          ansible-playbook -i inventory.ini /infrastructure/ansible/playbook.yml \
           --extra-vars "dynamodb_table_name=${{ needs.terraform.outputs.dynamodb_table_name }} \
           sqs_queue_url=${{ needs.terraform.outputs.sqs_queue_url }} \
           bucket_name=${{ needs.terraform.outputs.bucket_name }} \
