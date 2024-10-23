@@ -95,7 +95,7 @@ jobs:
 
       - name: Create Ansible Inventory
         run: |
-          echo "[polybot]" > inventory.ini
+          echo "[polybot]" >> inventory.ini
           ips=$(echo '${{ needs.Terraform.outputs.polybot_public_ips }}' | jq -r '.[]')
           for ip in $ips; do
             echo "$ip" >> inventory.ini
