@@ -68,11 +68,12 @@ jobs:
           echo "::set-output name=alias_record::$(terraform output -raw alias_record)"
 
     outputs:
-      polybot_public_ips: ${{ steps.outputs.outputs.polybot_public_ips }}
-      dynamodb_table_name: ${{ steps.outputs.outputs.dynamodb_table_name }}
-      sqs_queue_url: ${{ steps.outputs.outputs.sqs_queue_url }}
-      bucket_name: ${{ steps.outputs.outputs.bucket_name }}
-      alias_record: ${{ steps.outputs.outputs.alias_record }}
+
+          polybot_public_ips: ${{ steps.outputs.outputs.polybot_public_ips }}  
+          dynamodb_table_name: ${{ steps.outputs.dynamodb_table_name }
+          sqs_queue_url: ${{ steps.outputs.sqs_queue_url }
+          bucket_name: ${{ steps.outputs.bucket_name }
+          alias_record: ${{ steps.outputs.alias_record }
 
       
   ansible:
@@ -101,7 +102,7 @@ jobs:
           echo "Bucket Name: ${{ needs.terraform.outputs.bucket_name }}"
           echo "Alias Record: ${{ needs.terraform.outputs.alias_record }}"
         shell: bash
-        
+
       - name: Create Ansible Inventory
         run: | 
                  echo "[polybot]" > inventory.ini
