@@ -11,7 +11,7 @@ terraform {
   backend "s3" {
     bucket = "dork-tf-state"
     key    = "tfstate.json"
-    region = "eu-morth-1"
+    region = "eu-north-1"
 
   }
 
