@@ -3,7 +3,7 @@ output "sqs_queue_url" {
   description = "The sqs queue"
 }
 
-output "dynamo_table_name" {
+output "dynamodb_table_name" {
   value       = module.common.dynamo_table_name
   description = "The table's name"
 }

@@ -10,7 +10,7 @@ app = flask.Flask(__name__)
 
 aws_region = os.getenv('AWS_REGION')
 dynamodb_table = os.getenv('DYNAMODB_TABLE')
-record_name = os.getenv('RECORD_NAME')
+alias_record = os.getenv('ALIAS_RECORD')
 
 def get_secret():
 
@@ -40,7 +40,7 @@ def get_secret():
 # TODO load TELEGRAM_TOKEN value from Secret Manager
 
 TELEGRAM_TOKEN = get_secret()
-TELEGRAM_APP_URL =  f'https://{record_name}:8443'
+TELEGRAM_APP_URL =  f'https://{alias_record}:8443'
 
 
 @app.route('/', methods=['GET'])
