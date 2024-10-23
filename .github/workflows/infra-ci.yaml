@@ -93,6 +93,15 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y ansible
 
+      - name: Print Terraform Outputs
+        run: |
+          echo "Polybot Public IPs: ${{ needs.terraform.outputs.polybot_public_ips }}"
+          echo "DynamoDB Table Name: ${{ needs.terraform.outputs.dynamodb_table_name }}"
+          echo "SQS Queue URL: ${{ needs.terraform.outputs.sqs_queue_url }}"
+          echo "Bucket Name: ${{ needs.terraform.outputs.bucket_name }}"
+          echo "Alias Record: ${{ needs.terraform.outputs.alias_record }}"
+        shell: bash
+        
       - name: Create Ansible Inventory
         run: | 
                  echo "[polybot]" > inventory.ini
