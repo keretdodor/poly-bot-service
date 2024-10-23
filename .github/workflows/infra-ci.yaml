@@ -68,13 +68,12 @@ jobs:
           echo "::set-output name=alias_record::$(terraform output -raw alias_record)"
 
     outputs:
-
-          polybot_public_ips: ${{ env.polybot_public_ips }}
-          dynamodb_table_name: ${{ env.dynamodb_table_name }}
-          sqs_queue_url: ${{ env.sqs_queue_url }}
-          bucket_name: ${{ env.bucket_name }}
-          alias_record: ${{ env.alias_record }}
-
+    outputs:
+      polybot_public_ips: ${{ steps.outputs.outputs.polybot_public_ips }}
+      dynamodb_table_name: ${{ steps.outputs.dynamodb_table_name }}  
+      sqs_queue_url: ${{ steps.outputs.sqs_queue_url }}  
+      bucket_name: ${{ steps.outputs.bucket_name }}  
+      alias_record: ${{ steps.outputs.alias_record }}  
       
   ansible:
     name: Ansible Configuration
@@ -96,11 +95,11 @@ jobs:
 
       - name: Print Terraform Outputs
         run: |
-          echo "Polybot Public IPs: ${{ needs.terraform.outputs.polybot_public_ips }}"
-          echo "DynamoDB Table Name: ${{ needs.terraform.outputs.dynamodb_table_name }}"
-          echo "SQS Queue URL: ${{ needs.terraform.outputs.sqs_queue_url }}"
-          echo "Bucket Name: ${{ needs.terraform.outputs.bucket_name }}"
-          echo "Alias Record: ${{ needs.terraform.outputs.alias_record }}"
+          echo "Polybot Public IPs: $polybot_public_ips"
+          echo "DynamoDB Table Name: $dynamodb_table_name"
+          echo "SQS Queue URL: $sqs_queue_url"
+          echo "Bucket Name: $bucket_name"
+          echo "Alias Record: $alias_record"
         shell: bash
 
       - name: Create Ansible Inventory
