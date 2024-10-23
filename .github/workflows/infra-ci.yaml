@@ -88,13 +88,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Test outputs
+      - name: Get Terraform Outputs
+        id: tfout
         run: |
-          echo "Polybot Public IPs: ${{ needs.terraform.outputs.polybot_public_ips }}"
-          echo "DynamoDB Table Name: ${{ needs.terraform.outputs.dynamodb_table_name }}"
-          echo "SQS Queue URL: ${{ needs.terraform.outputs.sqs_queue_url }}"
-          echo "Bucket Name: ${{ needs.terraform.outputs.s3_bucket }}"
-          echo "Alias Record: ${{ needs.terraform.outputs.alias_record }}"
+          echo "polybot_public_ips=$(terraform output -raw polybot_public_ips)" >> "$GITHUB_OUTPUT"
+          echo "dynamodb_table_name=$(terraform output -raw dynamodb_table_name)" >> "$GITHUB_OUTPUT"
+          echo "sqs_queue_url=$(terraform output -raw sqs_queue_url)" >> "$GITHUB_OUTPUT"
+          echo "bucket_name=$(terraform output -raw bucket_name)" >> "$GITHUB_OUTPUT"
+          echo "alias_record=$(terraform output -raw alias_record)" >> "$GITHUB_OUTPUT"
 
       - name: Install Ansible
         run: |
