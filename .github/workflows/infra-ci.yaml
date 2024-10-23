@@ -95,17 +95,18 @@ jobs:
 
       - name: Create Ansible Inventory
         run: | 
-                echo "[polybot]" > inventory.ini
-                echo "Raw Terraform output: '${{ needs.Terraform.outputs.polybot_public_ips }}'"
-                ips=$(echo "${{ needs.Terraform.outputs.polybot_public_ips }}" | jq -r '.[]')
-                if [[ -z "$ips" ]]; then
-                  echo "No IPs found in Terraform output."
-                  exit 1
-                fi
-                for ip in $ips; do
-                  echo "$ip" >> inventory.ini
-                done
-                cat inventory.ini
+                  echo "[polybot]" > inventory.ini
+                  echo "Raw Terraform output: '${{ needs.Terraform.outputs.polybot_public_ips }}'"
+                  ips=$(echo '${{ needs.Terraform.outputs.polybot_public_ips }}' | jq -r '.[]')
+                  if [[ -z "$ips" ]]; then
+                    echo "No IPs found in Terraform output."
+                    exit 1
+                  fi
+                  for ip in $ips; do
+                    echo "$ip" >> inventory.ini
+                  done
+                  cat inventory.ini
+
 
         shell: bash
 
