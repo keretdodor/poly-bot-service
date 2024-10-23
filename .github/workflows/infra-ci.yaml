@@ -68,7 +68,7 @@ jobs:
           echo "::set-output name=alias_record::$(terraform output -raw alias_record)"
 
     outputs:
-    outputs:
+    
       polybot_public_ips: ${{ steps.outputs.outputs.polybot_public_ips }}
       dynamodb_table_name: ${{ steps.outputs.dynamodb_table_name }}  
       sqs_queue_url: ${{ steps.outputs.sqs_queue_url }}  
