@@ -106,6 +106,8 @@ jobs:
                 # Add each IP to the inventory
                 for ip in $ips; do
                   echo "$ip" >> inventory.ini
+
+                  cat inventory.ini
                 done
         shell: bash
 
