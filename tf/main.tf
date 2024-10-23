@@ -33,7 +33,7 @@ module "polybot" {
 
   instance_type = "t3.micro"
   key_name      = "BECKS-stockholm-10/9/24"
-  alias_record  = "polypol.magvonim.site"
+  alias_record  = "polypol-ms.magvonim.site"
   vpc_id        = module.common.vpc_id
   subnet_id     = module.common.public_subnets
 
