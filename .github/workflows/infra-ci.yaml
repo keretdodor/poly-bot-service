@@ -97,18 +97,16 @@ jobs:
         run: | 
                 echo "[polybot]" > inventory.ini
                 echo "Raw Terraform output: '${{ needs.Terraform.outputs.polybot_public_ips }}'"
-                # Parse the IPs by splitting on spaces or commas, depending on the format
-                ips=$(echo "${{ needs.Terraform.outputs.polybot_public_ips }}" | tr ',' ' ')
+                ips=$(echo "${{ needs.Terraform.outputs.polybot_public_ips }}" | jq -r '.[]')
                 if [[ -z "$ips" ]]; then
                   echo "No IPs found in Terraform output."
                   exit 1
                 fi
-                # Add each IP to the inventory
                 for ip in $ips; do
                   echo "$ip" >> inventory.ini
-
-                  cat inventory.ini
                 done
+                cat inventory.ini
+
         shell: bash
 
 
