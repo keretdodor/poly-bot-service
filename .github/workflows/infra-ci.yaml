@@ -37,16 +37,16 @@ jobs:
           aws-region: ${{ vars.AWS_REGION }} # Or you can use ${{ secrets.AWS_REGION }} if set in secrets
 
       # Step 4: Initialize Terraform
-      - name: Terraform Init
-        run: terraform init
+      - name: Terraform Init 
+        run: terraform init -var="aws_region=${{ vars.AWS_REGION }}"
 
       # Step 5: Validate Terraform syntax
       - name: Terraform Validate
-        run: terraform validate
+        run: terraform validate -var="aws_region=${{ vars.AWS_REGION }}"
 
       # Step 6: Terraform Format Check
       - name: Terraform Format
-        run: terraform fmt -check
+        run: terraform fmt -check -var="aws_region=${{ vars.AWS_REGION }}"
 
       # Step 7: Terraform Plan
       - name: Terraform Plan
