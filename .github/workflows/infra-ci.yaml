@@ -70,10 +70,10 @@ jobs:
     outputs:
 
           polybot_public_ips: ${{ steps.outputs.outputs.polybot_public_ips }}  
-          dynamodb_table_name: ${{ steps.outputs.dynamodb_table_name }
-          sqs_queue_url: ${{ steps.outputs.sqs_queue_url }
-          bucket_name: ${{ steps.outputs.bucket_name }
-          alias_record: ${{ steps.outputs.alias_record }
+          dynamodb_table_name: ${{ steps.outputs.dynamodb_table_name }}
+          sqs_queue_url: ${{ steps.outputs.sqs_queue_url }}
+          bucket_name: ${{ steps.outputs.bucket_name }}
+          alias_record: ${{ steps.outputs.alias_record }}
 
       
   ansible:
