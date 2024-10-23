@@ -69,7 +69,8 @@ jobs:
       - name: Set Terraform Outputs as Environment Variables
         id: set-envs
         run: |
-          echo "POLYBOT_PUBLIC_IPS=$(terraform output -json polybot_public_ips | jq -r '. | join(" ")')" >> $GITHUB_ENV
+          POLYBOT_PUBLIC_IPS=$(terraform output -json polybot_public_ips | jq -r '. | join(" ")')
+          echo "POLYBOT_PUBLIC_IPS=${POLYBOT_PUBLIC_IPS}" >> $GITHUB_ENV
           echo "DYNAMODB_TABLE_NAME=$(terraform output -raw dynamodb_table_name)" >> $GITHUB_ENV
           echo "SQS_QUEUE_URL=$(terraform output -raw sqs_queue_url)" >> $GITHUB_ENV
           echo "BUCKET_NAME=$(terraform output -raw bucket_name)" >> $GITHUB_ENV
