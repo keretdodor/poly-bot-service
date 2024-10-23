@@ -51,7 +51,7 @@ module "yolo5" {
   dynamodb_table_name = module.common.dynamodb_table_name
   s3_bucket = module.common.bucket_name
   alias_record = module.polybot.alias_record
-  aws_region = var.region
+  aws_region = var.aws_region
 
 
 }

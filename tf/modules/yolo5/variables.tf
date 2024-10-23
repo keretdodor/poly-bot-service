@@ -23,16 +23,20 @@ variable "dynamodb_table_name" {
    type        = string
 }
 
-variable "sqs_queue_name" {
-   description = "sqs name"
+variable "sqs_queue_url" {
+   description = "sqs url"
    type        = string
 }
-variable "bucket_name" {
+variable "s3_bucket" {
    description = "bucket name"
    type        = string
 }
 
 variable "alias_record" {
+  type        = string
+  description = "The full alias record"
+}
+variable "aws_region" {
   type        = string
   description = "The full alias record"
 }

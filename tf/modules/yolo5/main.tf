@@ -11,9 +11,9 @@ resource "aws_instance" "yolo5" {
   user_data = templatefile("module/yolo5/deploy.sh", {
       SQS_QUEUE_URL = var.sqs_queue_url
       DYNAMODB_TABLE_NAME = var.dynamodb_table_name
-      S3_BUCKET = var.bucket_name
+      S3_BUCKET = var.s3_bucket
       ALIAS_RECORD = var.alias_record
-      AWS_REGION = var.region
+      AWS_REGION = var.aws_region
 
   })
  tags = {
