@@ -10,12 +10,12 @@ on:
 
 jobs:
   terraform:
+    name: Terraform Infrastructure
     runs-on: ubuntu-latest
      
     defaults:
-     run:
-       working-directory: ./tf 
-
+      run:
+        working-directory: ./tf 
 
     steps:
       # Step 1: Checkout the code
@@ -57,7 +57,6 @@ jobs:
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         run: terraform apply -var="aws_region=${{ vars.AWS_REGION }}" -auto-approve
 
-
       - name: Get Terraform Outputs
         id: outputs
         run: |
@@ -68,21 +67,20 @@ jobs:
           echo "::set-output name=alias_record::$(terraform output -raw alias_record)"
 
     outputs:
-    
       polybot_public_ips: ${{ steps.outputs.outputs.polybot_public_ips }}
-      dynamodb_table_name: ${{ steps.outputs.dynamodb_table_name }}  
-      sqs_queue_url: ${{ steps.outputs.sqs_queue_url }}  
-      bucket_name: ${{ steps.outputs.bucket_name }}  
-      alias_record: ${{ steps.outputs.alias_record }}  
-      
+      dynamodb_table_name: ${{ steps.outputs.outputs.dynamodb_table_name }}  
+      sqs_queue_url: ${{ steps.outputs.outputs.sqs_queue_url }}  
+      bucket_name: ${{ steps.outputs.outputs.bucket_name }}  
+      alias_record: ${{ steps.outputs.outputs.alias_record }}  
+
   ansible:
     name: Ansible Configuration
     runs-on: ubuntu-latest
     needs: terraform  
 
     defaults:
-     run:
-       working-directory: ./infrastructure/ansible/
+      run:
+        working-directory: ./infrastructure/ansible/
 
     steps:
       - name: Checkout repository
@@ -95,21 +93,19 @@ jobs:
 
       - name: Print Terraform Outputs
         run: |
-          echo "Polybot Public IPs: $polybot_public_ips"
-          echo "DynamoDB Table Name: $dynamodb_table_name"
-          echo "SQS Queue URL: $sqs_queue_url"
-          echo "Bucket Name: $bucket_name"
-          echo "Alias Record: $alias_record"
+          echo "Polybot Public IPs: ${{ needs.terraform.outputs.polybot_public_ips }}"
+          echo "DynamoDB Table Name: ${{ needs.terraform.outputs.dynamodb_table_name }}"
+          echo "SQS Queue URL: ${{ needs.terraform.outputs.sqs_queue_url }}"
+          echo "Bucket Name: ${{ needs.terraform.outputs.bucket_name }}"
+          echo "Alias Record: ${{ needs.terraform.outputs.alias_record }}"
         shell: bash
 
       - name: Create Ansible Inventory
         run: | 
-                 echo "[polybot]" > inventory.ini
-                 echo "${{ fromJson(needs.terraform.outputs.polybot_public_ips) }}" | jq -r '.[]' >> inventory.ini
-                 cat inventory.ini
-                 
+          echo "[polybot]" > inventory.ini
+          echo "${{ fromJson(needs.terraform.outputs.polybot_public_ips) }}" | jq -r '.[]' >> inventory.ini
+          cat inventory.ini
         shell: bash
-
 
       - name: Run Ansible Playbook
         run: |
@@ -119,4 +115,3 @@ jobs:
           bucket_name=${{ needs.terraform.outputs.bucket_name }} \
           aws_region=${{ vars.AWS_REGION }}"
         shell: bash
-    
