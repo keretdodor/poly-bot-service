@@ -93,10 +93,13 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y ansible
 
-        name: Create Ansible Inventory
+      - name: Create Ansible Inventory
         run: |
           echo "[polybot]" > inventory.ini
-          echo "${{ fromJson(needs.Build.outputs.ips) | join('\n') }}" >> inventory.ini
+          ips=$(echo '${{ needs.Terraform.outputs.polybot_public_ips }}' | jq -r '.[]')
+          for ip in $ips; do
+            echo "$ip" >> inventory.ini
+          done
         shell: bash
 
 
