@@ -34,7 +34,7 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: eu-north-1 # Or you can use ${{ secrets.AWS_REGION }} if set in secrets
+          aws-region: ${{ env.AWS_REGION }} # Or you can use ${{ secrets.AWS_REGION }} if set in secrets
 
       # Step 4: Initialize Terraform
       - name: Terraform Init
@@ -50,12 +50,12 @@ jobs:
 
       # Step 7: Terraform Plan
       - name: Terraform Plan
-        run: terraform plan
+        run: terraform plan -var="aws_region=${{ env.AWS_REGION }}"
 
       # Optional: Step 8: Apply (controlled, often manual step)
       - name: Terraform Apply
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        run: terraform apply -auto-approve
+        run: terraform apply -var="aws_region=${{ env.AWS_REGION }}" -auto-approve
 
 
       - name: Get Terraform Outputs
@@ -81,8 +81,8 @@ jobs:
 
     defaults:
      run:
-       working-directory: ./tf 
-       
+       working-directory: ./infrastructure/ansible/
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -92,12 +92,19 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y ansible
 
+        name: Create Ansible Inventory
+        run: |
+          echo "[polybot]" > inventory.ini
+          echo "${{ fromJson(needs.Build.outputs.ips) | join('\n') }}" >> inventory.ini
+        shell: bash
+
+
       - name: Run Ansible Playbook
         run: |
-          ansible-playbook -i "${{ needs.terraform.outputs.ips }}," playbook.yml \
+          ansible-playbook -i inventory.ini playbook.yml \
           --extra-vars "dynamodb_table_name=${{ needs.terraform.outputs.dynamodb_table_name }} \
           sqs_queue_url=${{ needs.terraform.outputs.sqs_queue_url }} \
-          bucket_name=${{ needs.terraform.outputs.bucket_name }} \ "
-
-
+          bucket_name=${{ needs.terraform.outputs.bucket_name }} \
+          aws_region=${{ env.AWS_REGION }}"
+        shell: bash
     
