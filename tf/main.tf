@@ -11,13 +11,13 @@ terraform {
   backend "s3" {
     bucket = "dork-tf-state"
     key    = "tfstate.json"
-    region = "eu-north-1"
+    region = var.aws_region
 
   }
 
 }
 provider "aws" {
-  region = "eu-north-1"
+  region = var.aws_region
 }
 
 module "common" {
@@ -37,6 +37,7 @@ module "polybot" {
   vpc_id        = module.common.vpc_id
   subnet_id     = module.common.public_subnets
 
+
 }
 module "yolo5" {
   source = "./modules/yolo5"
@@ -45,4 +46,12 @@ module "yolo5" {
   key_name      = "BECKS-stockholm-10/9/24"
   vpc_id        = module.common.vpc_id
   subnet_id     = module.common.public_subnets
+
+  sqs_queue_url = module.common.sqs_queue_url
+  dynamodb_table_name = module.common.dynamodb_table_name
+  s3_bucket = module.common.bucket_name
+  alias_record = module.polybot.alias_record
+  aws_region = var.region
+
+
 }

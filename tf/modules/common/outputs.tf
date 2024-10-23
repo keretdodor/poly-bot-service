@@ -13,7 +13,7 @@ output "sqs_queue_url" {
   description = "The ID of the VPC"
 }
 
-output "dynamo_table_name" {
+output "dynamodb_table_name" {
   value = aws_dynamodb_table.polybot-table.name
   description = "The table's name"
 }

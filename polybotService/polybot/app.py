@@ -10,7 +10,7 @@ app = flask.Flask(__name__)
 
 aws_region = os.getenv('AWS_REGION')
 dynamodb_table = os.getenv('DYNAMODB_TABLE')
-alias_record = os.getenv('ALIAS_RECORD')
+record_name = os.getenv('RECORD_NAME')
 
 def get_secret():
 
