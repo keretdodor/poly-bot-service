@@ -60,7 +60,7 @@ jobs:
         run: terraform apply -var="aws_region=${{ vars.AWS_REGION }}" -auto-approve
              terraform output -raw sqs_url > sqs_url.txt
         
-        name: Upload SQS URL as Artifact
+      - name: Upload SQS URL as Artifact
         uses: actions/upload-artifact@v2
         with:
           name: sqs-url
@@ -112,7 +112,7 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: sqs-url
-          
+
       - name: Read SQS URL
         run: |
           SQS_URL=$(cat sqs_url.txt)
