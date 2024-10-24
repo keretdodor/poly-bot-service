@@ -61,7 +61,7 @@ jobs:
              terraform output -raw sqs_url > sqs_url.txt
         
       - name: Upload SQS URL as Artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: sqs-url
           path: sqs_url.txt
@@ -109,7 +109,7 @@ jobs:
           echo "Alias Record: ${{ needs.terraform.outputs.alias_record }}"
 
       - name: Download SQS URL Artifact
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: sqs-url
 
