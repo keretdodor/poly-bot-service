@@ -68,11 +68,12 @@ jobs:
 
       - name: Set SQS Queue URL and Account ID
         id: set_sqs_info
-        run:
+        run: |
           SQS_URL=$(terraform output -raw sqs_queue_url)
           ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
           JSON_OUTPUT=$(jq -n --arg sqs_url "$SQS_URL" --arg account_id "$ACCOUNT_ID" '{sqs_queue_url: $sqs_url, account_id: $account_id}')
           echo "sqs_info=${JSON_OUTPUT}" >> $GITHUB_OUTPUT
+
 
         id: tfout
         run: |
