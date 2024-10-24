@@ -58,9 +58,9 @@ jobs:
       - name: Terraform Apply
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         run: terraform apply -var="aws_region=${{ vars.AWS_REGION }}" -auto-approve 
-        
+
       - name: Creating an sqs url file"
-        run: terraform output -raw sqs_url > sqs_url.txt
+        run: terraform output -raw sqs_queue_url > sqs_url.txt
 
       - name: Upload SQS URL as Artifact
         uses: actions/upload-artifact@v3
