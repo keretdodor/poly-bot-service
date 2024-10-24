@@ -12,6 +12,7 @@ jobs:
   terraform:
     name: Terraform Infrastructure
     runs-on: ubuntu-latest
+
      
     defaults:
       run:
@@ -27,6 +28,7 @@ jobs:
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: 1.7.0
+          terraform_wrapper: false
 
       # Step 3: Configure AWS Credentials
       - name: Configure AWS credentials
@@ -73,8 +75,7 @@ jobs:
           s3_bucket: ${{ steps.tfout.outputs.bucket_name }}
           alias_record: ${{ steps.tfout.outputs.alias_record }}
           
-  
-
+          
   ansible:
     name: Ansible Configuration
     runs-on: ubuntu-latest
@@ -88,15 +89,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Get Terraform Outputs
-        id: tfout
-        run: |
-          echo "polybot_public_ips=$(terraform output -raw polybot_public_ips)" >> "$GITHUB_OUTPUT"
-          echo "dynamodb_table_name=$(terraform output -raw dynamodb_table_name)" >> "$GITHUB_OUTPUT"
-          echo "sqs_queue_url=$(terraform output -raw sqs_queue_url)" >> "$GITHUB_OUTPUT"
-          echo "bucket_name=$(terraform output -raw bucket_name)" >> "$GITHUB_OUTPUT"
-          echo "alias_record=$(terraform output -raw alias_record)" >> "$GITHUB_OUTPUT"
-
       - name: Install Ansible
         run: |
           sudo apt-get update
@@ -104,8 +96,11 @@ jobs:
 
       - name: Print Terraform Outputs
         run: |
-            echo "IPs ${{ needs.outputs.out}} 
-        shell: bash
+          echo "Polybot Public IPs: ${{ needs.terraform.outputs.polybot_public_ips }}"
+          echo "DynamoDB Table Name: ${{ needs.terraform.outputs.dynamodb_table_name }}"
+          echo "SQS Queue URL: ${{ needs.terraform.outputs.sqs_queue_url }}"
+          echo "S3 Bucket Name: ${{ needs.terraform.outputs.s3_bucket }}"
+          echo "Alias Record: ${{ needs.terraform.outputs.alias_record }}"
 
       - name: Create Ansible Inventory
         run: | 
@@ -116,9 +111,13 @@ jobs:
 
       - name: Run Ansible Playbook
         run: |
-          ansible-playbook -i inventory.ini playbook.yaml \
-          --extra-vars "dynamodb_table_name=${{ needs.terraform.outputs.dynamodb_table_name }} \
-          sqs_queue_url=${{ needs.terraform.outputs.sqs_queue_url }} \
-          bucket_name=${{ needs.terraform.outputs.bucket_name }} \
-          aws_region=${{ vars.AWS_REGION }}"
+        
+            ansible-playbook -i inventory.ini playbook.yaml \
+            --extra-vars "dynamodb_table_name=${{ needs.terraform.outputs.dynamodb_table_name }} \
+            sqs_queue_url=${{ needs.terraform.outputs.sqs_queue_url }} \
+            bucket_name=${{ needs.terraform.outputs.s3_bucket }} \
+            alias_record=${{ needs.terraform.outputs.alias_record }} \
+            aws_region=${{ vars.AWS_REGION }}"
+
+
         shell: bash
