@@ -58,9 +58,7 @@ jobs:
       - name: Terraform Apply
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         run: terraform apply -var="aws_region=${{ vars.AWS_REGION }}" -auto-approve 
-
-      -
-
+        
       - run: mkdir -p tf/out/artifact
 
       - run: terraform output -raw sqs_queue_url > tf/out/artifact/sqs_url.txt
