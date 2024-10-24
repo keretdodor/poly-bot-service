@@ -59,14 +59,16 @@ jobs:
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         run: terraform apply -var="aws_region=${{ vars.AWS_REGION }}" -auto-approve 
 
-      - name: Creating an sqs url file"
-        run: terraform output -raw sqs_queue_url > sqs_url.txt
+      -
 
-      - name: Upload SQS URL as Artifact
-        uses: actions/upload-artifact@v3
+      - run: mkdir -p tf/out/artifact
+
+      - run: terraform output -raw sqs_queue_url > tf/out/artifact/sqs_url.txt
+
+      - uses: actions/upload-artifact@master
         with:
           name: sqs-url
-          path: sqs_url.txt
+          path: tf/out/artifact  
 
       - name:
         id: tfout
@@ -82,7 +84,6 @@ jobs:
           sqs_queue_url: ${{ steps.tfout.outputs.sqs_queue_url }}
           s3_bucket: ${{ steps.tfout.outputs.bucket_name }}
           alias_record: ${{ steps.tfout.outputs.alias_record }}
-          sqs_info: ${{ steps.set_sqs_info.outputs.sqs_info }}
           
           
   ansible:
@@ -110,16 +111,14 @@ jobs:
           echo "S3 Bucket Name: ${{ needs.terraform.outputs.s3_bucket }}"
           echo "Alias Record: ${{ needs.terraform.outputs.alias_record }}"
 
-      - name: Download SQS URL Artifact
-        uses: actions/download-artifact@v3
+
+      - uses: actions/download-artifact@master
         with:
           name: sqs-url
-
-      - name: Read SQS URL
-        run: |
-          SQS_URL=$(cat sqs_url.txt)
-          echo "SQS URL is $SQS_URL"
-          
+          path: tf/out/artifact 
+    
+      - run: SQS_URL=$(cat tf/out/artifact
+      - run: echo "SQS URL is $SQS_URL"  
 
       - name: Create Ansible Inventory
         run: | 
