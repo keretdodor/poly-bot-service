@@ -74,7 +74,7 @@ jobs:
           JSON_OUTPUT=$(jq -n --arg sqs_url "$SQS_URL" --arg account_id "$ACCOUNT_ID" '{sqs_queue_url: $sqs_url, account_id: $account_id}')
           echo "sqs_info=${JSON_OUTPUT}" >> $GITHUB_OUTPUT
 
-
+      - name:
         id: tfout
         run: |
           echo "polybot_public_ips=$(terraform output -json polybot_public_ips)" >> "$GITHUB_OUTPUT"
@@ -89,6 +89,7 @@ jobs:
           sqs_queue_url: ${{ steps.tfout.outputs.sqs_queue_url }}
           s3_bucket: ${{ steps.tfout.outputs.bucket_name }}
           alias_record: ${{ steps.tfout.outputs.alias_record }}
+          sqs_info: ${{ steps.set_sqs_info.outputs.sqs_info }}
           
           
   ansible:
@@ -117,6 +118,7 @@ jobs:
           echo "SQS Info: ${{ fromJson(needs.terraform.outputs.sqs_info) }}"
           echo "S3 Bucket Name: ${{ needs.terraform.outputs.s3_bucket }}"
           echo "Alias Record: ${{ needs.terraform.outputs.alias_record }}"
+          
 
       - name: Create Ansible Inventory
         run: | 
