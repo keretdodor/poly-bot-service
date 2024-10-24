@@ -59,7 +59,21 @@ jobs:
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         run: terraform apply -var="aws_region=${{ vars.AWS_REGION }}" -auto-approve
 
-      - name: Get Terraform Outputs
+      - name: Get AWS Account ID
+        id: get_account_id
+        run: |
+          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          echo "account_id=${ACCOUNT_ID}" >> $GITHUB_ENV
+            - name: Get Terraform Outputs
+
+      - name: Set SQS Queue URL and Account ID
+        id: set_sqs_info
+        run:
+          SQS_URL=$(terraform output -raw sqs_queue_url)
+          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          JSON_OUTPUT=$(jq -n --arg sqs_url "$SQS_URL" --arg account_id "$ACCOUNT_ID" '{sqs_queue_url: $sqs_url, account_id: $account_id}')
+          echo "sqs_info=${JSON_OUTPUT}" >> $GITHUB_OUTPUT
+
         id: tfout
         run: |
           echo "polybot_public_ips=$(terraform output -json polybot_public_ips)" >> "$GITHUB_OUTPUT"
@@ -99,13 +113,14 @@ jobs:
           echo "Polybot Public IPs: ${{ needs.terraform.outputs.polybot_public_ips }}"
           echo "DynamoDB Table Name: ${{ needs.terraform.outputs.dynamodb_table_name }}"
           echo "SQS Queue URL: ${{ needs.terraform.outputs.sqs_queue_url }}"
+          echo "SQS Info: ${{ fromJson(needs.terraform.outputs.sqs_info) }}"
           echo "S3 Bucket Name: ${{ needs.terraform.outputs.s3_bucket }}"
           echo "Alias Record: ${{ needs.terraform.outputs.alias_record }}"
 
       - name: Create Ansible Inventory
         run: | 
           echo "[polybot]" > inventory.ini
-          echo ${{ needs.terraform.outputs.polybot_public_ips }}" | jq -r '.[]' >> inventory.ini
+          echo "${{ fromJson(needs.terraform.outputs.polybot_public_ips) }}"  | jq -r '.[]' >> inventory.ini
           cat inventory.ini
         shell: bash
 
@@ -114,7 +129,7 @@ jobs:
         
             ansible-playbook -i inventory.ini playbook.yaml \
             --extra-vars "dynamodb_table_name=${{ needs.terraform.outputs.dynamodb_table_name }} \
-            sqs_queue_url=${{ needs.terraform.outputs.sqs_queue_url }} \
+            sqs_queue_url=${{ fromJson(needs.terraform.outputs.sqs_info) }}" \
             bucket_name=${{ needs.terraform.outputs.s3_bucket }} \
             alias_record=${{ needs.terraform.outputs.alias_record }} \
             aws_region=${{ vars.AWS_REGION }}"
