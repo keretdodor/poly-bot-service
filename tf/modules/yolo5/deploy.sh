@@ -5,6 +5,7 @@ apt-get install -y docker.io
 apt-get install -y ansible
 systemctl start docker
 systemctl enable docker
+systemctl restart docker
 
 docker pull keretdodor/yolo5
 docker run -d --restart always -e SQS_QUEUE_URL=${SQS_QUEUE_URL} -e DYNAMODB_TABLE_NAME=${DYNAMODB_TABLE_NAME} -e S3_BUCKET=${S3_BUCKET} -e ALIAS_RECORD=${ALIAS_RECORD} -e AWS_REGION=${AWS_REGION} keretdodor/yolo5

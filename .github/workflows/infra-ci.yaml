@@ -62,9 +62,9 @@ jobs:
       - name: Get Terraform Outputs
         id: tfout
         run: |
-          echo "polybot_public_ips=$(terraform output -raw polybot_public_ips)" >> "$GITHUB_OUTPUT"
+          echo "polybot_public_ips=$(terraform output -json polybot_public_ips)" >> "$GITHUB_OUTPUT"
           echo "dynamodb_table_name=$(terraform output -raw dynamodb_table_name)" >> "$GITHUB_OUTPUT"
-          echo "sqs_queue_url=$(terraform output -raw sqs_queue_url)" >> "$GITHUB_OUTPUT"
+          echo "sqs_queue_url=$(terraform output -raw sqs_queue_url | tr -d '\n')" >> "$GITHUB_OUTPUT"
           echo "bucket_name=$(terraform output -raw bucket_name)" >> "$GITHUB_OUTPUT"
           echo "alias_record=$(terraform output -raw alias_record)" >> "$GITHUB_OUTPUT"
 
