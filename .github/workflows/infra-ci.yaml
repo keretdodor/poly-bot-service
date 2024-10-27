@@ -77,7 +77,7 @@ jobs:
         run: |
           echo "[polybot]" > futurean/inventory.ini
           for ip in $(terraform output -json polybot_public_ips | jq -r '.[]'); do
-            echo "$ip ansible_user=ubuntu ansible_ssh_private_key_file=private_key.pem ansible_ssh_common_args='-o StrictHostKeyChecking=no'" >> ansible/inventory.ini
+            echo "$ip ansible_user=ubuntu ansible_ssh_private_key_file=private_key.pem ansible_ssh_common_args='-o StrictHostKeyChecking=no'" >> futurean/inventory.ini
           done
           cat  futurean/inventory.ini
         shell: bash
