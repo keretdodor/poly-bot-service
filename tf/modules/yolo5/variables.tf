@@ -38,5 +38,5 @@ variable "alias_record" {
 }
 variable "aws_region" {
   type        = string
-  description = "The full alias record"
+  description = "the aws region"
 }

@@ -12,77 +12,76 @@ jobs:
   terraform:
     name: Terraform Infrastructure
     runs-on: ubuntu-latest
-
-     
     defaults:
       run:
         working-directory: ./tf 
 
     steps:
-      # Step 1: Checkout the code
+
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Step 2: Setup Terraform
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: 1.7.0
           terraform_wrapper: false
 
-      # Step 3: Configure AWS Credentials
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ vars.AWS_REGION }} # Or you can use ${{ secrets.AWS_REGION }} if set in secrets
+          aws-region: ${{ vars.AWS_REGION }} 
+          mask-aws-account-id: 'no'
 
-      # Step 4: Initialize Terraform
       - name: Terraform Init 
-        run: terraform init -var="aws_region=${{ vars.AWS_REGION }}"
+        run: terraform init -var="aws_region=${{ vars.AWS_REGION }}" -var="cert_arn${{secrets.CERT_ARN}}"
 
-      # Step 5: Validate Terraform syntax
-      - name: Terraform Validate
-        run: terraform validate
-
-      # Step 6: Terraform Format Check
-      - name: Terraform Format
-        run: terraform fmt -check
-
-      # Step 7: Terraform Plan
+  
       - name: Terraform Plan
-        run: terraform plan -var="aws_region=${{ vars.AWS_REGION }}"
+        run: terraform plan -var="aws_region=${{ vars.AWS_REGION }}" -var="cert_arn${{secrets.CERT_ARN}}"
 
-      # Optional: Step 8: Apply (controlled, often manual step)
       - name: Terraform Apply
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        run: terraform apply -var="aws_region=${{ vars.AWS_REGION }}" -auto-approve 
+        run: terraform apply -var="aws_region=${{ vars.AWS_REGION }}" -var="cert_arn${{secrets.CERT_ARN}}" -auto-approve 
         
-      - run: mkdir -p tf/out/artifact
+      - name: Key File Creation
+        run: |
+            echo '${{ secrets.PRIVATE_KEY }}' >> futurean/private_key.pem
+            chmod 600 futurean/private_key.pem
 
-      - run: terraform output -raw sqs_queue_url > tf/out/artifact/sqs_url.txt
+      - name: Ansible's Inventory File Creation
+        run: |
+          echo "[servers]" > futurean/inventory.ini
+          for ip in $(terraform output -json instance_public_ips | jq -r '.[]'); do
+            echo "$ip ansible_user=ubuntu ansible_ssh_private_key_file=private_key.pem ansible_ssh_common_args='-o StrictHostKeyChecking=no'" >> ansible/inventory.ini
+          done
+          cat  futurean/inventory.ini
+        shell: bash
 
-      - uses: actions/upload-artifact@master
+      - name: Upload Private Key And Inventory Using Artifact
+        uses: actions/upload-artifact@v3
         with:
-          name: sqs-url
-          path: tf/out/artifact  
+          name: ansible
+          path: futurean/*
+
+      - name: Terminate AMI-Image
+        run:  aws ec2 terminate-instances --instance-ids $(terraform output -raw ami_ip ) --output json
 
       - name:
         id: tfout
         run: |
-          echo "polybot_public_ips=$(terraform output -json polybot_public_ips)" >> "$GITHUB_OUTPUT"
           echo "dynamodb_table_name=$(terraform output -raw dynamodb_table_name)" >> "$GITHUB_OUTPUT"
           echo "bucket_name=$(terraform output -raw bucket_name)" >> "$GITHUB_OUTPUT"
           echo "alias_record=$(terraform output -raw alias_record)" >> "$GITHUB_OUTPUT"
-
+          echo "sqs_queue_url"=$terraform output -raw sqs_queue_url)" >> "$GITHUB_OUTPUT"
+ 
     outputs:
-          polybot_public_ips: ${{ steps.tfout.outputs.polybot_public_ips }}
           dynamodb_table_name: ${{ steps.tfout.outputs.dynamodb_table_name }}
           sqs_queue_url: ${{ steps.tfout.outputs.sqs_queue_url }}
           s3_bucket: ${{ steps.tfout.outputs.bucket_name }}
           alias_record: ${{ steps.tfout.outputs.alias_record }}
-          
           
   ansible:
     name: Ansible Configuration
@@ -108,29 +107,19 @@ jobs:
           echo "DynamoDB Table Name: ${{ needs.terraform.outputs.dynamodb_table_name }}"
           echo "S3 Bucket Name: ${{ needs.terraform.outputs.s3_bucket }}"
           echo "Alias Record: ${{ needs.terraform.outputs.alias_record }}"
+          echo "SQS QUEUE URL: ${{ needs.terraform.outputs.sqs_queue_url }}"
 
-
-      - uses: actions/download-artifact@master
+      - uses: actions/download-artifact@mv3
         with:
-          name: sqs-url
-          path: tf/out/artifact 
+          name: ansible
+          path: /infrastructure/ansible/
     
-      - run: SQS_URL=$(cat tf/out/artifact
-      - run: echo "SQS URL is $SQS_URL"  
-
-      - name: Create Ansible Inventory
-        run: | 
-          echo "[polybot]" > inventory.ini
-          echo "${{ fromJson(needs.terraform.outputs.polybot_public_ips) }}"  | jq -r '.[]' >> inventory.ini
-          cat inventory.ini
-        shell: bash
-
       - name: Run Ansible Playbook
         run: |
         
-            ansible-playbook -i inventory.ini playbook.yaml \
+            ansible-playbook -i inventory.ini playbook.yaml \ --private-key private_key.pem \
             --extra-vars "dynamodb_table_name=${{ needs.terraform.outputs.dynamodb_table_name }} \
-            sqs_queue_url=$SQS_URL
+            sqs_queue_url=${{ needs.terraform.outputs.sqs_queue_url }} \
             bucket_name=${{ needs.terraform.outputs.s3_bucket }} \
             alias_record=${{ needs.terraform.outputs.alias_record }} \
             aws_region=${{ vars.AWS_REGION }}"

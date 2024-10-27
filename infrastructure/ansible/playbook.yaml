@@ -17,17 +17,17 @@
 
     - name: Pull Docker container image
       docker_image:
-        name: "keretdodor/yolo5"
+        name: "keretdodor/polybot"
         source: pull
 
     - name: Run Docker container with environment variables
       docker_container:
-        name: "yourapp"
-        image: "keretdodor/yolo5"
+        name: "polybot"
+        image: "keretdodor/polybot"
         state: started
         restart_policy: always
         env:
-          DYNAMODB_TABLE_NAME: "{{ dynamodb_table_name }}"
+          DYNAMODB_TABLE: "{{ dynamodb_table_name }}"
           SQS_QUEUE_URL: "{{ sqs_queue_url }}"
           S3_BUCKET: "{{ bucket_name }}"
           ALIAS_RECORD: "{{ alias_record }}"

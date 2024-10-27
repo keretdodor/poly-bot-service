@@ -36,6 +36,7 @@ module "polybot" {
   alias_record  = "polypol-ms.magvonim.site"
   vpc_id        = module.common.vpc_id
   subnet_id     = module.common.public_subnets
+  cert_arn      = var.cert_arn
 
 
 }
