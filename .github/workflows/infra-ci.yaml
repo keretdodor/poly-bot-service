@@ -61,6 +61,7 @@ jobs:
         
       - name: Key File Creation
         run: |
+            mkdir futurean
             echo '${{ secrets.PRIVATE_KEY }}' >> futurean/private_key.pem
             chmod 600 futurean/private_key.pem
 
