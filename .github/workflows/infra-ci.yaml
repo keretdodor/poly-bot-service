@@ -86,13 +86,13 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ansible-inv
-          path: futurean/inventory.ini
+          path: infrastructure/ansible/inventory.ini
       
       - name: Upload Private Key Using Artifact
         uses: actions/upload-artifact@v4
         with:
           name: ansible-key
-          path: futurean/private_key.pem
+          path: infrastructure/ansible/private_key.pem
 
 
       - name: Terminate AMI-Image
