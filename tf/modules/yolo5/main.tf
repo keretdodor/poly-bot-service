@@ -1,14 +1,16 @@
 #AMI creation
-
 resource "aws_instance" "yolo5" {
-  ami = data.aws_ami.ubuntu_ami.id
-  instance_type = var.instance_type
-  key_name = var.key_name
-
-  subnet_id                   = var.subnet_id[0]
-  vpc_security_group_ids      = [aws_security_group.yolo5-sg.id]
+  ami                    = data.aws_ami.ubuntu_ami.id
+  instance_type         = var.instance_type
+  key_name              = var.key_name
+  subnet_id             = var.subnet_id[0]
+  vpc_security_group_ids = [aws_security_group.yolo5-sg.id]
   associate_public_ip_address = true
   
+  tags = {
+    Name = "yolo5"
+  }
+
   connection {
     type        = "ssh"
     user        = "ubuntu"
@@ -23,15 +25,10 @@ resource "aws_instance" "yolo5" {
       "sudo systemctl start docker",
       "sudo systemctl enable docker",
       "sudo docker pull keretdodor/yolo5",
-      "sudo docker run -d --restart always -e AWS_REGION=${var.aws_region} -e DYNAMODB_TABLE=${var.dynamodb_table_name} -e S3_BUCKET=${var.s3_bucket} -e SQS_QUEUE_URL=${var.sqs_queue_url} -e ALIAS_RECORD=${var.alias_record} diskoproject/yolo5"
+      "sudo docker run -d --restart always -e AWS_REGION=${var.aws_region} -e DYNAMODB_TABLE=${var.dynamodb_table_name} -e S3_BUCKET=${var.s3_bucket} -e SQS_QUEUE_URL=${var.sqs_queue_url} -e ALIAS_RECORD=${var.alias_record} keretdodor/yolo5"
     ]
   }
 
- tags = {
-    Name = "yolo5" 
-
-     }
-  
   }
 
 resource "aws_security_group" "yolo5-sg" {
