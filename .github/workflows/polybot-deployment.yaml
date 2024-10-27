@@ -14,14 +14,26 @@ jobs:
       run:
         working-directory: ./polybot
     steps:
+
+      - name: Install Docker
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker.io
+          sudo systemctl start docker
+          sudo systemctl enable docker
+          sudo usermod -aG docker $USER
+
       - name: Checkout the repo code
         uses: actions/checkout@v3
         
+      - name: Docker Build
+        run: docker build . -t polybot
 
-      - name: Build and push image
-        run: docker build
-          
-          # TODO your implementation here....          
+      - name: Docker Tag
+        run: docker tag polybot keretdodor/polybot
+      
+      - name: Docker Push
+        run: docker push keretdodor/polybot:latest
 
   Deploy:
     runs-on: ubuntu-latest
