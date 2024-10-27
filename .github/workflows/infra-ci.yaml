@@ -83,13 +83,13 @@ jobs:
         shell: bash
 
       - name: Upload Inventory Using Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ansible-inv
           path: futurean/inventory.ini
       
       - name: Upload Private Key Using Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ansible-key
           path: futurean/private_key.pem
@@ -130,12 +130,12 @@ jobs:
           echo "Alias Record: ${{ needs.terraform.outputs.alias_record }}"
           echo "SQS QUEUE URL: ${{ needs.terraform.outputs.sqs_queue_url }}"
 
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: ansible-inv
           path: infrastructure/ansible
       
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: ansible-key
           path: infrastructure/ansible
@@ -146,7 +146,7 @@ jobs:
             ansible-playbook -i inventory.ini playbook.yaml \ --private-key private_key.pem \
             --extra-vars "dynamodb_table_name=${{ needs.terraform.outputs.dynamodb_table_name }} \
             sqs_queue_url=${{ needs.terraform.outputs.sqs_queue_url }} \
-            bucket_name=${{ needs.terraform.outputs.s3_bucket }} \
+            bucket_name=${{ needs.terraform.outputs.s4_bucket }} \
             alias_record=${{ needs.terraform.outputs.alias_record }} \
             aws_region=${{ vars.AWS_REGION }}"
 
