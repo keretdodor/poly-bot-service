@@ -40,3 +40,7 @@ variable "aws_region" {
   type        = string
   description = "the aws region"
 }
+variable "private_key" {
+  type        = string
+  description = "the aws region"
+}

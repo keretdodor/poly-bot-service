@@ -21,3 +21,7 @@ variable "alias_record" {
   type        = string
   description = "The full alias record"
 }
+variable "cert_arn" {
+  type        = string
+  description = "The full alias record"
+}

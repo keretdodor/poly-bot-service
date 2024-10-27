@@ -36,15 +36,15 @@ jobs:
           mask-aws-account-id: 'no'
 
       - name: Terraform Init 
-        run: terraform init -var="aws_region=${{ vars.AWS_REGION }}" -var="cert_arn${{secrets.CERT_ARN}}"
+        run: terraform init -var="aws_region=${{ vars.AWS_REGION }}" -var="cert_arn${{secrets.CERT_ARN}}" -var="private_key{{secrets.PRIVATE_KEY}}"
 
   
       - name: Terraform Plan
-        run: terraform plan -var="aws_region=${{ vars.AWS_REGION }}" -var="cert_arn${{secrets.CERT_ARN}}"
+        run: terraform plan -var="aws_region=${{ vars.AWS_REGION }}" -var="cert_arn${{secrets.CERT_ARN}}" -var="private_key{{secrets.PRIVATE_KEY}}"
 
       - name: Terraform Apply
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        run: terraform apply -var="aws_region=${{ vars.AWS_REGION }}" -var="cert_arn${{secrets.CERT_ARN}}" -auto-approve 
+        run: terraform apply -var="aws_region=${{ vars.AWS_REGION }}" -var="cert_arn${{secrets.CERT_ARN}}" -var="private_key{{secrets.PRIVATE_KEY}}" -auto-approve 
         
       - name: Key File Creation
         run: |
