@@ -82,11 +82,18 @@ jobs:
           cat  futurean/inventory.ini
         shell: bash
 
-      - name: Upload Private Key And Inventory Using Artifact
+      - name: Upload Inventory Using Artifact
         uses: actions/upload-artifact@v3
         with:
-          name: ansible
-          path: futurean/*
+          name: ansible-inv
+          path: futurean/inventory.ini
+      
+      - name: Upload Private Key Using Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: ansible-key
+          path: futurean/private_key.pem
+
 
       - name: Terminate AMI-Image
         run:  aws ec2 terminate-instances --instance-ids $(terraform output -raw ami_ip ) --output json
@@ -125,7 +132,12 @@ jobs:
 
       - uses: actions/download-artifact@v3
         with:
-          name: ansible
+          name: ansible-inv
+          path: infrastructure/ansible
+      
+      - uses: actions/download-artifact@v3
+        with:
+          name: ansible-key
           path: infrastructure/ansible
     
       - name: Run Ansible Playbook
