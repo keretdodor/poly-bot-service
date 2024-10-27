@@ -126,7 +126,7 @@ jobs:
       - uses: actions/download-artifact@v3
         with:
           name: ansible
-          path: /infrastructure/ansible/
+          path: infrastructure/ansible
     
       - name: Run Ansible Playbook
         run: |
