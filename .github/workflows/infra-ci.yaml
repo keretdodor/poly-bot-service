@@ -70,29 +70,29 @@ jobs:
       - name: Key File Creation
         run: |
             mkdir futurean
-            echo '${{ secrets.PRIVATE_KEY }}' >> infrastructure/ansible/private_key.pem
-            chmod 600 infrastructure/ansible/private_key.pem
+            echo '${{ secrets.PRIVATE_KEY }}' >> futurean/private_key.pem
+            chmod 600 futurean/private_key.pem
 
       - name: Ansible's Inventory File Creation
         run: |
-          echo "[polybot]" > infrastructure/ansible/inventory.ini
+          echo "[polybot]" > futurean/inventory.ini
           for ip in $(terraform output -json polybot_public_ips | jq -r '.[]'); do
-            echo "$ip ansible_user=ubuntu ansible_ssh_private_key_file=private_key.pem ansible_ssh_common_args='-o StrictHostKeyChecking=no'" >> infrastructure/ansible/inventory.ini
+            echo "$ip ansible_user=ubuntu ansible_ssh_private_key_file=private_key.pem ansible_ssh_common_args='-o StrictHostKeyChecking=no'" >> futurean/inventory.ini
           done
-          cat  infrastructure/ansible/inventory.ini
+          cat  futurean/inventory.ini
         shell: bash
 
       - name: Upload Inventory Using Artifact
         uses: actions/upload-artifact@v4
         with:
           name: ansible-inv
-          path: infrastructure/ansible/inventory.ini
+          path: futurean/inventory.ini
       
       - name: Upload Private Key Using Artifact
         uses: actions/upload-artifact@v4
         with:
           name: ansible-key
-          path: infrastructure/ansible/private_key.pem
+          path: futurean/private_key.pem
 
 
       - name: Terminate AMI-Image
