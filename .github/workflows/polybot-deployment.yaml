@@ -14,14 +14,32 @@ jobs:
       run:
         working-directory: ./polybot
     steps:
+
+      - name: Install Docker
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker.io
+          sudo systemctl start docker
+          sudo systemctl enable docker
+          sudo usermod -aG docker $USER
+
+      - name: Login to docker
+        env: 
+          DOCKER_USR: ${{var.DOCKER_USR}}
+          DOCKER_PWD: ${{secret.DOCKER_PWD}}
+        run: echo "$DOCKER_PWD" | docker login --username $DOCKER_USR --password-stdin
+
       - name: Checkout the repo code
         uses: actions/checkout@v3
         
+      - name: Docker Build
+        run: docker build . -t polybot
 
-      - name: Build and push image
-        run: docker build
-          
-          # TODO your implementation here....          
+      - name: Docker Tag
+        run: docker tag polybot keretdodor/polybot
+      
+      - name: Docker Push
+        run: docker push keretdodor/polybot:latest
 
   Deploy:
     runs-on: ubuntu-latest
@@ -30,8 +48,24 @@ jobs:
 
     steps:
       - name: Checkout the repo code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
+
+      - name: Install Ansible
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ansible
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ vars.AWS_REGION }} 
+          mask-aws-account-id: 'no'
+
+     
+
       - name: Deploy new version
         run: |         
-          # TODO your implementation here....     
+            
      
