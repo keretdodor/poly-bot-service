@@ -45,7 +45,7 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - Build
-
+    
     steps:
       - name: Checkout the repo code
         uses: actions/checkout@v3
@@ -63,9 +63,54 @@ jobs:
           aws-region: ${{ vars.AWS_REGION }} 
           mask-aws-account-id: 'no'
 
-     
+      - name: AWS outputs
+        id: aws_outputs
+        run: |
+          # Get SQS Queue URL
+          sqs_url=$(aws sqs list-queues | jq -r '.QueueUrls[]' | while read queue_url; do
+            aws sqs list-queue-tags --queue-url "$queue_url" | \
+            jq -r --arg url "$queue_url" 'select(.Tags.Name == "polybot") | $url'
+          done)
 
-      - name: Deploy new version
-        run: |         
+          # Get S3 Bucket
+          s3_bucket=$(aws resourcegroupstaggingapi get-resources \
+            --tag-filters Key=Name,Values=polybot \
+            --resource-type-filters s3 \
+            --output json | grep -oP '(?<=s3:::)[^"]*')
+
+          # Get DynamoDB Table Name
+          dynamodb_table=$(aws dynamodb list-tables | jq -r '.TableNames[]' | while read table; do
+            aws dynamodb list-tags-of-resource \
+            --resource-arn "arn:aws:dynamodb:$(aws configure get region):$(aws sts get-caller-identity --query Account --output text):table/$table" | \
+            jq -r --arg table "$table" 'select(.Tags[] | select(.Key=="Name" and .Value=="polybot")) | $table'
+          done)
+
+      - name: Ansible's Inventory File Creation
+        run: |
+          echo "[polybot]" > inventory.ini
+          for ip in $(terraform output -json polybot_public_ips | jq -r '.[]'); do
+            echo "$ip ansible_user=ubuntu ansible_ssh_private_key_file=private_key.pem ansible_ssh_common_args='-o StrictHostKeyChecking=no'" >> inventory.ini
+          done
+          cat inventory.ini
+        shell: bash
+
+      - name: Key File Creation
+        run: |
+            echo '${{ secrets.PRIVATE_KEY }}' > private_key.pem
+            chmod 600 private_key.pem
+    
+      - name: Run Ansible Playbook
+        shell: bash
+        run: |
+          ansible-playbook -i inventory.ini playbook.yaml --private-key private_key.pem \
+          --extra-vars "dynamodb_table_name=$dynamodb_table \
+          sqs_queue_url=$sqs_url \
+          bucket_name=s3_bucket\
+          alias_record=${{var.ALIAS_RECORD}} \
+          aws_region=${{ vars.AWS_REGION }}"
+
+          
+
+
             
      
