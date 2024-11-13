@@ -13,13 +13,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
-      - name: Install Docker
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y docker.io
-          sudo systemctl start docker
-          sudo systemctl enable docker
-          sudo usermod -aG docker $USER
+     # - name: Install Docker
+     #   run: |
+     #     sudo apt-get update
+     #     sudo apt-get install -y docker.io
+     #     sudo systemctl start docker
+     #     sudo systemctl enable docker
+     #     sudo usermod -aG docker $USER
 
       - name: Login to docker
         env: 
