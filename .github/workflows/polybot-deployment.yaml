@@ -26,8 +26,8 @@ jobs:
 
       - name: Login to docker
         env: 
-          DOCKER_USR: ${{var.DOCKER_USR}}
-          DOCKER_PWD: ${{secret.DOCKER_PWD}}
+          DOCKER_USR: ${{secrets.DOCKER_USR}}
+          DOCKER_PWD: ${{secrets.DOCKER_PWD}}
         run: echo "$DOCKER_PWD" | docker login --username $DOCKER_USR --password-stdin
 
       - name: Checkout the repo code
