@@ -74,8 +74,7 @@ jobs:
             --resource-arn "arn:aws:dynamodb:$(aws configure get region):$(aws sts get-caller-identity --query Account --output text):table/$table" | \
             jq -r --arg table "$table" 'select(.Tags[] | select(.Key=="Name" and .Value=="polybot")) | $table'
           done)
-      - name: AWS outputs
-        id: aws_outputs
+      - name: AWS outputs debugging
         run: |
           echo "S3 Bucket for 'polybot': $s3_bucket" \
           echo "DynamoDB Table Name for 'polybot': $dynamodb_table" \ 
