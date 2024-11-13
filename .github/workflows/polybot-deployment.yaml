@@ -79,7 +79,8 @@ jobs:
             jq -r --arg table "$table" 'select(.Tags[] | select(.Key=="Name" and .Value=="polybot")) | $table'
           done)
 
-      - name: Ansible's Inventory File Creation
+      - name: Ansible's Inventory File Creation\
+        working-directory: ./infrastructure/ansible
         run: |
           echo "[polybot]" > inventory.ini
           for ip in $(terraform output -json polybot_public_ips | jq -r '.[]'); do
@@ -89,11 +90,13 @@ jobs:
         shell: bash
 
       - name: Key File Creation
+        working-directory: ./infrastructure/ansible
         run: |
             echo '${{ secrets.PRIVATE_KEY }}' > private_key.pem
             chmod 600 private_key.pem
     
       - name: Run Ansible Playbook
+        working-directory: ./infrastructure/ansible
         shell: bash
         run: |
           ansible-playbook -i inventory.ini playbook.yaml --private-key private_key.pem \
