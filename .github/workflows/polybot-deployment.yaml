@@ -56,40 +56,46 @@ jobs:
       - name: AWS outputs
         id: aws_outputs
         run: |
-          # Get SQS Queue URL
+
           sqs_url=$(aws sqs list-queues | jq -r '.QueueUrls[]' | while read queue_url; do
             aws sqs list-queue-tags --queue-url "$queue_url" | \
             jq -r --arg url "$queue_url" 'select(.Tags.Name == "polybot") | $url'
           done)
-      
-          # Get S3 Bucket
+          echo "Found SQS URL: $sqs_url"
+
           s3_bucket=$(aws resourcegroupstaggingapi get-resources \
             --tag-filters Key=Name,Values=polybot \
             --resource-type-filters s3 \
-            --output json | grep -oP '(?<=s3:::)[^"]*')
-      
-          # Get DynamoDB Table Name
+            --output json | jq -r '.ResourceTagMappingList[].ResourceARN | select(contains("s3")) | split(":")[5]')
+          echo "Found S3 bucket: $s3_bucket"
+
+          region=$(aws configure get region)
+          account_id=$(aws sts get-caller-identity --query Account --output text)
           dynamodb_table=$(aws dynamodb list-tables | jq -r '.TableNames[]' | while read table; do
             aws dynamodb list-tags-of-resource \
-            --resource-arn "arn:aws:dynamodb:$(aws configure get region):$(aws sts get-caller-identity --query Account --output text):table/$table" | \
+            --resource-arn "arn:aws:dynamodb:${region}:${account_id}:table/${table}" | \
             jq -r --arg table "$table" 'select(.Tags[] | select(.Key=="Name" and .Value=="polybot")) | $table'
           done)
-      
+          echo "Found DynamoDB table: $dynamodb_table"
+
+          echo "sqs_url=${sqs_url}" >> $GITHUB_ENV
+          echo "s3_bucket=${s3_bucket}" >> $GITHUB_ENV
+          echo "dynamodb_table=${dynamodb_table}" >> $GITHUB_ENV
+
       - name: AWS outputs debugging
         run: |
-          echo "S3 Bucket for 'polybot': $s3_bucket"
-          echo "DynamoDB Table Name for 'polybot': $dynamodb_table"
-          echo "SQS URL for 'polybot': $sqs_url" 
-      
-      
-      - name: Ansible's Inventory File Creation\
+          echo "S3 Bucket for 'polybot': ${s3_bucket}"
+          echo "DynamoDB Table Name for 'polybot': ${dynamodb_table}"
+          echo "SQS URL for 'polybot': ${sqs_url}"
+
+      - name: Ansible's Inventory File Creation
         working-directory: ./infrastructure/ansible
         run: |
           echo "[polybot]" > inventory.ini
-          eaws ec2 describe-instances | jq -r '.Reservations[].Instances[] | select(contains({Tags: [{Key: "Name"}, {Value: "polybot"}]}) | not) | .PublicIpAddress' | \ 
-          grep -oE '[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' >> inventory.ini 
+          aws ec2 describe-instances | \
+          jq -r '.Reservations[].Instances[] | select(.Tags[]? | select(.Key=="Name" and .Value=="polybot")) | .PublicIpAddress' | \
+          grep -oE '[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' >> inventory.ini
           cat inventory.ini
-        shell: bash
 
       - name: Key File Creation
         working-directory: ./infrastructure/ansible
@@ -102,12 +108,11 @@ jobs:
         shell: bash
         run: |
           ansible-playbook -i inventory.ini playbook.yaml --private-key private_key.pem \
-          --extra-vars "dynamodb_table_name=$dynamodb_table \
-          sqs_queue_url=$sqs_url \
-          bucket_name=s3_bucket\
+          --extra-vars "dynamodb_table_name=${dynamodb_table} \
+          sqs_queue_url=${sqs_url} \
+          bucket_name=${s3_bucket} \
           alias_record=${{vars.ALIAS_RECORD}} \
           aws_region=${{ vars.AWS_REGION }}"
-
           
 
 
