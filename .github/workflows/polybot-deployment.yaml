@@ -61,26 +61,27 @@ jobs:
             aws sqs list-queue-tags --queue-url "$queue_url" | \
             jq -r --arg url "$queue_url" 'select(.Tags.Name == "polybot") | $url'
           done)
-
+      
           # Get S3 Bucket
           s3_bucket=$(aws resourcegroupstaggingapi get-resources \
             --tag-filters Key=Name,Values=polybot \
             --resource-type-filters s3 \
             --output json | grep -oP '(?<=s3:::)[^"]*')
-
+      
           # Get DynamoDB Table Name
           dynamodb_table=$(aws dynamodb list-tables | jq -r '.TableNames[]' | while read table; do
             aws dynamodb list-tags-of-resource \
             --resource-arn "arn:aws:dynamodb:$(aws configure get region):$(aws sts get-caller-identity --query Account --output text):table/$table" | \
             jq -r --arg table "$table" 'select(.Tags[] | select(.Key=="Name" and .Value=="polybot")) | $table'
           done)
+      
       - name: AWS outputs debugging
         run: |
-          echo "S3 Bucket for 'polybot': $s3_bucket" \
-          echo "DynamoDB Table Name for 'polybot': $dynamodb_table" \ 
+          echo "S3 Bucket for 'polybot': $s3_bucket"
+          echo "DynamoDB Table Name for 'polybot': $dynamodb_table"
           echo "SQS URL for 'polybot': $sqs_url" 
-
-
+      
+      
       - name: Ansible's Inventory File Creation\
         working-directory: ./infrastructure/ansible
         run: |
