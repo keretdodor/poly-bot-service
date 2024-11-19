@@ -56,7 +56,7 @@ jobs:
       - name: AWS outputs
         id: aws_outputs
         run: |
-        
+
           # Get SQS Queue URL (this one works, keeping it as is)
           sqs_url=$(aws sqs list-queues | jq -r '.QueueUrls[]' | while read queue_url; do
             aws sqs list-queue-tags --queue-url "$queue_url" | \
@@ -72,12 +72,7 @@ jobs:
           echo "Found S3 bucket: $s3_bucket"
 
           # Modified DynamoDB table lookup
-          echo "Looking for DynamoDB table with tag Name=polybot"
-          dynamodb_table=$(aws dynamodb list-tables | jq -r '.TableNames[]' | while read table; do
-            echo "Checking table: $table"
-            aws dynamodb describe-table --table-name "$table" | \
-            jq -r --arg table "$table" '.Table.TableName | select(. != null)'
-          done)
+          aws dynamodb list-tables | jq -r '.TableNames[]' | grep polybot
           echo "Found DynamoDB table: $dynamodb_table"
 
           # Export variables
