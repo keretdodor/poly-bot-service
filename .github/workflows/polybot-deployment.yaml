@@ -101,18 +101,15 @@ jobs:
         working-directory: ./infrastructure/ansible
         run: |
           echo "[polybot]" > inventory.ini
-`
           ips=$(aws ec2 describe-instances \
               --query "Reservations[].Instances[].[PublicIpAddress, Tags[?Key=='Name'].Value | [0]]" \
               --output text | grep 'polybot-' | awk '{print $1}' | grep -v None)
-
           ips_list="["$(echo $ips | sed 's/ /", "/g' | sed 's/^/"/' | sed 's/$/"/')"]"
-
           for ip in $(echo $ips_list | jq -r '.[]'); do
               echo "$ip ansible_user=ubuntu ansible_ssh_private_key_file=private_key.pem ansible_ssh_common_args='-o StrictHostKeyChecking=no'" >> inventory.ini
-          dones
-
+          done
           cat inventory.ini
+
       - name: Inventory Permissions
         working-directory: ./infrastructure/ansible
         run: |
