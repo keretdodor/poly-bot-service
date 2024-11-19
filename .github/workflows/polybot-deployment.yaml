@@ -52,31 +52,31 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ vars.AWS_REGION }} 
           mask-aws-account-id: 'no'
-      
+
       - name: AWS outputs
         id: aws_outputs
         run: |
           # First, let's list all available resources for debugging
           echo "Listing available DynamoDB tables:"
           aws dynamodb list-tables
-          
+
           echo "Listing EC2 instances:"
           aws ec2 describe-instances --query 'Reservations[].Instances[].{ID:InstanceId,Name:Tags[?Key==`Name`].Value|[0],IP:PublicIpAddress}'
-          
+
           # Get SQS Queue URL (this one works, keeping it as is)
           sqs_url=$(aws sqs list-queues | jq -r '.QueueUrls[]' | while read queue_url; do
             aws sqs list-queue-tags --queue-url "$queue_url" | \
             jq -r --arg url "$queue_url" 'select(.Tags.Name == "polybot") | $url'
           done)
           echo "Found SQS URL: $sqs_url"
-      
+
           # Get S3 Bucket (this one works, keeping it as is)
           s3_bucket=$(aws resourcegroupstaggingapi get-resources \
             --tag-filters Key=Name,Values=polybot \
             --resource-type-filters s3 \
             --output json | jq -r '.ResourceTagMappingList[].ResourceARN | select(contains("s3")) | split(":")[5]')
           echo "Found S3 bucket: $s3_bucket"
-      
+
           # Modified DynamoDB table lookup
           echo "Looking for DynamoDB table with tag Name=polybot"
           dynamodb_table=$(aws dynamodb list-tables | jq -r '.TableNames[]' | while read table; do
@@ -85,45 +85,39 @@ jobs:
             jq -r --arg table "$table" '.Table.TableName | select(. != null)'
           done)
           echo "Found DynamoDB table: $dynamodb_table"
-      
-          # Modified EC2 instance lookup
-          echo "Looking for EC2 instance with tag Name=polybot"
-          ec2_ip=$(aws ec2 describe-instances \
-            --filters "Name=tag:Name,Values=polybot" \
-            --query 'Reservations[].Instances[].PublicIpAddress' \
-            --output text)
-          echo "Found EC2 IP: $ec2_ip"
-      
+
           # Export variables
           echo "sqs_url=${sqs_url}" >> $GITHUB_ENV
           echo "s3_bucket=${s3_bucket}" >> $GITHUB_ENV
           echo "dynamodb_table=${dynamodb_table}" >> $GITHUB_ENV
-          echo "ec2_ip=${ec2_ip}" >> $GITHUB_ENV
-      
+
       - name: AWS outputs debugging
         run: |
           echo "S3 Bucket for 'polybot': ${s3_bucket}"
           echo "DynamoDB Table Name for 'polybot': ${dynamodb_table}"
           echo "SQS URL for 'polybot': ${sqs_url}"
-          echo "EC2 IP for 'polybot': ${ec2_ip}"
-      
+
       - name: Ansible's Inventory File Creation
         working-directory: ./infrastructure/ansible
-        run: |
           echo "[polybot]" > inventory.ini
-          if [ -n "${ec2_ip}" ]; then
-            echo "${ec2_ip}" >> inventory.ini
-          else
-            echo "No EC2 instance found with tag Name=polybot"
-            exit 1
-          fi
+`
+          ips=$(aws ec2 describe-instances \
+              --query "Reservations[].Instances[].[PublicIpAddress, Tags[?Key=='Name'].Value | [0]]" \
+              --output text | grep 'polybot-' | awk '{print $1}' | grep -v None)
+
+          ips_list="["$(echo $ips | sed 's/ /", "/g' | sed 's/^/"/' | sed 's/$/"/')"]"
+
+          for ip in $(echo $ips_list | jq -r '.[]'); do
+              echo "$ip ansible_user=ubuntu ansible_ssh_private_key_file=private_key.pem ansible_ssh_common_args='-o StrictHostKeyChecking=no'" >> inventory.ini
+          done
+
           cat inventory.ini
-            - name: Key File Creation
-              working-directory: ./infrastructure/ansible
-              run: |
-                  echo '${{ secrets.PRIVATE_KEY }}' > private_key.pem
-                  chmod 600 private_key.pem
-          
+      - name: Inventory Permissions
+        working-directory: ./infrastructure/ansible
+        run: |
+            echo '${{ secrets.PRIVATE_KEY }}' > private_key.pem
+            chmod 600 private_key.pem
+
       - name: Run Ansible Playbook
         working-directory: ./infrastructure/ansible
         shell: bash
