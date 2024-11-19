@@ -99,6 +99,7 @@ jobs:
 
       - name: Ansible's Inventory File Creation
         working-directory: ./infrastructure/ansible
+        run: |
           echo "[polybot]" > inventory.ini
 `
           ips=$(aws ec2 describe-instances \
@@ -109,7 +110,7 @@ jobs:
 
           for ip in $(echo $ips_list | jq -r '.[]'); do
               echo "$ip ansible_user=ubuntu ansible_ssh_private_key_file=private_key.pem ansible_ssh_common_args='-o StrictHostKeyChecking=no'" >> inventory.ini
-          done
+          dones
 
           cat inventory.ini
       - name: Inventory Permissions
