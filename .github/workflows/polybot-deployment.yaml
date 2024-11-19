@@ -56,13 +56,7 @@ jobs:
       - name: AWS outputs
         id: aws_outputs
         run: |
-          # First, let's list all available resources for debugging
-          echo "Listing available DynamoDB tables:"
-          aws dynamodb list-tables
-
-          echo "Listing EC2 instances:"
-          aws ec2 describe-instances --query 'Reservations[].Instances[].{ID:InstanceId,Name:Tags[?Key==`Name`].Value|[0],IP:PublicIpAddress}'
-
+        
           # Get SQS Queue URL (this one works, keeping it as is)
           sqs_url=$(aws sqs list-queues | jq -r '.QueueUrls[]' | while read queue_url; do
             aws sqs list-queue-tags --queue-url "$queue_url" | \
