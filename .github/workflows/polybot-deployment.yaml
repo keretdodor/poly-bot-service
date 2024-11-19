@@ -69,13 +69,13 @@ jobs:
             --output json | jq -r '.ResourceTagMappingList[].ResourceARN | select(contains("s3")) | split(":")[5]')
           echo "Found S3 bucket: $s3_bucket"
 
-          region=$(aws configure get region)
-          account_id=$(aws sts get-caller-identity --query Account --output text)
+          
           dynamodb_table=$(aws dynamodb list-tables | jq -r '.TableNames[]' | while read table; do
             aws dynamodb list-tags-of-resource \
-            --resource-arn "arn:aws:dynamodb:${region}:${account_id}:table/${table}" | \
+            --resource-arn "arn:aws:dynamodb:$(aws configure get region):$(aws sts get-caller-identity --query Account --output text):table/$table" | \
             jq -r --arg table "$table" 'select(.Tags[] | select(.Key=="Name" and .Value=="polybot")) | $table'
           done)
+
           echo "Found DynamoDB table: $dynamodb_table"
 
           echo "sqs_url=${sqs_url}" >> $GITHUB_ENV
